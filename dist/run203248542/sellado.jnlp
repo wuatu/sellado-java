@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="sellado.jnlp">
+  <information>
+    <title>sellado</title>
+    <vendor>crist</vendor>
+    <description>null</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="lib\JSerial-1.0.3.jar" size="25368" download="eager" />
+    <jar href="lib\jamod-1.2-SNAPSHOT.jar" size="148531" download="eager" />
+    <jar href="lib\jna-4.2.0.jar" size="1092828" download="eager" />
+    <jar href="lib\mysql-connector-java-8.0.21.jar" size="2397321" download="eager" />
+    <jar href="sellado.jar" size="29628" download="eager" />
+  </resources>
+  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="sellado" >
+    <param name="requiredFXVersion" value="8.0+"/>
+  </applet-desc>
+  <jfx:javafx-desc  width="800" height="600" main-class="sellado.Sellado"  name="sellado" />
+  <update check="always"/>
+</jnlp>

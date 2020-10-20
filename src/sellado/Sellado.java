@@ -12,6 +12,7 @@ import PortComJSerial.PortCOMSettings;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Application;
@@ -28,6 +29,8 @@ import javafx.stage.Stage;
  */
 public class Sellado extends Application {
 
+    ArrayList<PortCOM> portCOMArray = new ArrayList<>();
+    ArrayList<ModbusTCP> modbusTCPArray = new ArrayList<>();
     PortCOM portCOM = null;
     ModbusTCP modbusTCP = null;
     ConexionBaseDeDatosSellado conn = null;
@@ -38,16 +41,16 @@ public class Sellado extends Application {
     public void start(Stage primaryStage) {
 
         conn = new ConexionBaseDeDatosSellado();
-        
-        try {            
+
+        try {
             //obtener tiempo maximo de espera de caja 
-            int waitingTime=Query.getWaitingTime(conn);
-            
+            int waitingTime = Query.getWaitingTime(conn);
+
             //obtener lector validador
             ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
             //crear hilo lector validador
-            crearThreadLectorValidador(resultSetLectorValidador,waitingTime);
-            
+            crearThreadLectorValidador(resultSetLectorValidador, waitingTime);
+
             //obtener lectores en linea de tabla "linea" 
             ResultSet resultSetLectores = Query.getLectoresJoinLineaJoinCalibrador(conn);
             //crear hilo por cada lector
@@ -56,11 +59,12 @@ public class Sellado extends Application {
             //obtener RFID de tabla "rfid"
             ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibrador(conn);
             //crear hilo por cada rfid
-            crearThreadPorCadaRFID(resultSetRFID);                           
-            
+            crearThreadPorCadaRFID(resultSetRFID);
+
+            System.out.println("Configuracion inicial realizada satisfactoriamente");
             conn.getConnection().close();
             conn.disconnection();
-   
+
         } catch (SQLException ex) {
             System.out.println("Error tipo SQLException: " + ex.getMessage());
         }
@@ -82,6 +86,24 @@ public class Sellado extends Application {
         primaryStage.setTitle("Hello World!");
         primaryStage.setScene(scene);
         primaryStage.show();
+        primaryStage.setOnHiding(event -> {
+            System.out.println("Closing Stage");
+            for (PortCOM portCOM : portCOMArray) {
+                if (portCOM != null) {
+                    if (portCOM.thread != null) {
+                        portCOM.thread.stop();
+                    }
+                }
+            }
+
+            for (ModbusTCP modbusTCP : modbusTCPArray) {
+                if (modbusTCP != null) {
+                    if (modbusTCP.thread != null) {
+                        modbusTCP.thread.stop();
+                    }
+                }
+            }
+        });
     }
 
     private void crearThreadPorCadaRFID(ResultSet resultSetLectores) {
@@ -90,12 +112,12 @@ public class Sellado extends Application {
                 String calibradorId = resultSetLectores.getString("calibrador.id");
                 String lineaId = resultSetLectores.getString("linea.id");
                 String nombre = resultSetLectores.getString("nombre");
-                String port = resultSetLectores.getString("port");
+                String port = resultSetLectores.getString("ip");
                 String baudRate = resultSetLectores.getString("baudRate");
                 String parity = resultSetLectores.getString("parity");
                 String stopBits = resultSetLectores.getString("stopBits");
                 String dataBits = resultSetLectores.getString("dataBits");
-                String timeout = resultSetLectores.getString("timeout");
+                String timeout = "2000";
 
                 //creación de hilo RFID de códigos
                 portCOM = new PortCOM(
@@ -109,6 +131,7 @@ public class Sellado extends Application {
                         PortCOMSettings.stopBits(stopBits),
                         PortCOMSettings.dataBits(dataBits),
                         timeout);
+                portCOMArray.add(portCOM);
             }
         } catch (SQLException ex) {
             System.out.println("Error al obtener RFID: " + ex.getMessage());
@@ -121,13 +144,13 @@ public class Sellado extends Application {
             while (resultSetLectores.next()) {
                 String calibradorId = resultSetLectores.getString("calibrador.id");
                 String lineaId = resultSetLectores.getString("linea.id");
-                String nombre = resultSetLectores.getString("LECTOR");
-                String port = resultSetLectores.getString("port");
+                String nombre = resultSetLectores.getString("nombre");
+                String port = resultSetLectores.getString("ip");
                 String baudRate = resultSetLectores.getString("baudRate");
                 String parity = resultSetLectores.getString("parity");
                 String stopBits = resultSetLectores.getString("stopBits");
                 String dataBits = resultSetLectores.getString("dataBits");
-                String timeout = resultSetLectores.getString("timeout");
+                String timeout = "2000";
 
                 //creación de hilo lector de códigos
                 portCOM = new PortCOM(
@@ -141,21 +164,23 @@ public class Sellado extends Application {
                         PortCOMSettings.stopBits(stopBits),
                         PortCOMSettings.dataBits(dataBits),
                         timeout);
+                portCOMArray.add(portCOM);
             }
         } catch (SQLException ex) {
             System.out.println("Error al obtener lectores: " + ex.getMessage());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
-    private void crearThreadLectorValidador(ResultSet resultSetLector, int waitingTime){
+
+    private void crearThreadLectorValidador(ResultSet resultSetLector, int waitingTime) {
         try {
             while (resultSetLector.next()) {
                 String nombre = resultSetLector.getString("nombre");
                 String ip = resultSetLector.getString("ip");
-                
+
                 //creación de hilo lector validador
-                modbusTCP=new ModbusTCP(nombre, ip, waitingTime);
+                modbusTCP = new ModbusTCP(nombre, ip, waitingTime);
+                modbusTCPArray.add(modbusTCP);
             }
         } catch (SQLException ex) {
             System.out.println("Error al obtener lector validador: " + ex.getMessage());

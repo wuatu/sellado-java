@@ -55,11 +55,11 @@ public class PortCOMSettings {
     
     public static StopBits stopBits (String stopBitsString){
         StopBits stopBits=null;        
-        if(stopBitsString.equalsIgnoreCase("ONE")){
+        if(stopBitsString.equalsIgnoreCase("1")){
             stopBits=StopBits.ONE;
-        } else if(stopBitsString.equalsIgnoreCase("ONE_HALF")){
+        } else if(stopBitsString.equalsIgnoreCase("1.5")){
             stopBits=StopBits.ONE_HALF;
-        } else if(stopBitsString.equalsIgnoreCase("TWO")){
+        } else if(stopBitsString.equalsIgnoreCase("2")){
             stopBits=StopBits.TWO;
         } else{
             stopBits=StopBits.UNKNOWN;
@@ -69,11 +69,11 @@ public class PortCOMSettings {
     
     public static DataBits dataBits (String dataBitsString){
         DataBits dataBits=null;        
-        if(dataBitsString.equalsIgnoreCase("D5")){
+        if(dataBitsString.equalsIgnoreCase("5")){
             dataBits=DataBits.D5;
-        } else if(dataBitsString.equalsIgnoreCase("D7")){
+        } else if(dataBitsString.equalsIgnoreCase("7")){
             dataBits=DataBits.D7;
-        } else if(dataBitsString.equalsIgnoreCase("D8")){
+        } else if(dataBitsString.equalsIgnoreCase("8")){
             dataBits=DataBits.D8;
         } else{
             dataBits=DataBits.UNKNOWN;

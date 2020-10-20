@@ -31,7 +31,7 @@ public class ModbusTCP {
 
     ModbusTCPTransaction trans = null;
     TCPMasterConnection tcpMasterConnection = null; //the connection
-    Thread thread = null;    
+    public Thread thread = null;    
 
     public ModbusTCP(String nombre, String ip, int waitingTime) {
         try {

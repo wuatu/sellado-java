@@ -19,7 +19,7 @@ public class ConexionBaseDeDatosSellado {
     private String database="danich_sellado";
     private String usuario="root";
     private String password="";
-    private String url="jdbc:mysql://127.0.0.1:3307/"+database+"?useUnicode=true&use"
+    private String url="jdbc:mysql://127.0.0.1:3306/"+database+"?useUnicode=true&use"
             +"HDBCCompilantTimezoneShift=true&useLegacyDatetimeCode=false&"
             +"serverTimeZone=UTC";
     

@@ -46,13 +46,12 @@ import sellado.models.Caja;
 public class PortCOM {
 
     SerialPort portCom;
-    Thread thread = null;
+    public Thread thread = null;
     ConexionBaseDeDatosSellado conn = null;
     Statement statement = null;
     ConexionBaseDeDatosUnitec connUnitec = null;
 
     public PortCOM(String calibrador, String linea, String tag, String nombre, String port, BaudRate baudRate, Parity parity, StopBits stopBits, DataBits dataBits, String timeout) {
-
         // Get a new instance of SerialPort by opening a port.
         Runnable runableCom = new Runnable() {
             @Override
@@ -78,18 +77,23 @@ public class PortCOM {
                     try {
                         istream = portCom.getInputStream();
                         // Read some data using a stream
-                        byte[] byteBuffer = new byte[4096];
+                        byte[] byteBuffer = new byte[12];
                         int n = istream.read(byteBuffer);
                         if (n != 0) {
                             String hexStr = DatatypeConverter.printHexBinary(byteBuffer);
                             hexStr = hexStr.substring(0, ((n * 2)));
                             //System.out.println(asHexStr);
-                            String codigo = Utils.HexToASCII.convertHexToASCII(hexStr);
+                            String codigo = Utils.HexToASCII.hexToAscii(hexStr);
                             codigo = codigo.substring(1, codigo.length() - 1);
-                            //System.out.println("****** CODIGO LEIDO ******");
+                            System.out.println("****** Lectura ******");
+                            System.out.println("hex: " + hexStr);
                             System.out.println("Código: " + codigo);
-                            System.out.println("hacer una cosa");
+                            System.out.println("port: " + port);
+                            System.out.println("tag: " + tag);
                             if (tag == "LECTOR") {
+                                System.out.println("LECTOOOOOOOOOOOR");
+                                conn = new ConexionBaseDeDatosSellado();
+
                                 conn = new ConexionBaseDeDatosSellado();
                                 try {
                                     statement = conn.getConnection().createStatement();
@@ -98,7 +102,7 @@ public class PortCOM {
                                     Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                                 //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
-                                Caja caja = getCajaPorCodigoUnitec(codigo);                                                          
+                                Caja caja = getCajaPorCodigoUnitec(codigo);
 
                                 //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
                                 ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, port, Date.getDateString());
@@ -120,20 +124,27 @@ public class PortCOM {
                                 //obtener usuario por codigo rfid
                                 ResultSet resultSetUsuario = Query.getUsuarioPorRFID(conn, codigo);
 
-                                //obtener rfid, linea, y calibrador desde portCOM
-                                ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibradorWherePortCOM(conn, port);
+                                if (resultSetUsuario != null) {
 
-                                //verificar usuario en linea, actualizar fecha_termino
-                                Query.updateFechaTerminoUsuarioEnLinea(conn, resultSetUsuario);
+                                    ResultSet getUsuarioEnLinea = Query.getUsuarioEnLinea(conn, resultSetUsuario);
 
-                                //crear usuario en linea
-                                Query.insertUsuarioEnLinea(conn, resultSetUsuario, resultSetRFID);
+                                    if (getUsuarioEnLinea != null) {
+                                        //verificar usuario en linea, actualizar fecha_termino
+                                        Query.updateFechaTerminoUsuarioEnLinea(conn, resultSetUsuario);
+                                    }
+
+                                    //obtener rfid, linea, y calibrador desde portCOM
+                                    ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibradorWherePortCOM(conn, port);
+
+                                    //crear usuario en linea
+                                    Query.insertUsuarioEnLinea(conn, resultSetUsuario, resultSetRFID);
+                                }
 
                                 conn.getConnection().close();
                                 conn.disconnection();
                             }
                         }
-                        Thread.sleep(500);
+                        Thread.sleep(100);
                     } catch (IOException ex) {
                         System.out.println("error IOException portCom: " + ex.getMessage());
                         Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
