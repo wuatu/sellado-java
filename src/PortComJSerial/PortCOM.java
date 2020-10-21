@@ -61,6 +61,8 @@ public class PortCOM {
                     portCom.setTimeout(Integer.parseInt(timeout));
                     portCom.setConfig(baudRate, parity, stopBits, dataBits);
                 } catch (IOException ex) {
+                    /*
+                    //alerta funciona alerta
                     Platform.runLater(() -> {
                         Alert alert = new Alert(AlertType.ERROR);
                         alert.setTitle("Error de conexión");
@@ -68,6 +70,7 @@ public class PortCOM {
                         alert.setContentText("Error al conectar dispositivo " + tag);
                         alert.showAndWait();
                     });
+                     */
 
                     Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -77,21 +80,21 @@ public class PortCOM {
                     try {
                         istream = portCom.getInputStream();
                         // Read some data using a stream
-                        byte[] byteBuffer = new byte[12];
+                        byte[] byteBuffer = new byte[1024];
                         int n = istream.read(byteBuffer);
                         if (n != 0) {
                             String hexStr = DatatypeConverter.printHexBinary(byteBuffer);
+                            System.out.println("hexStr: " + hexStr);
                             hexStr = hexStr.substring(0, ((n * 2)));
                             //System.out.println(asHexStr);
                             String codigo = Utils.HexToASCII.hexToAscii(hexStr);
-                            codigo = codigo.substring(1, codigo.length() - 1);
+                            //codigo = codigo.substring(0, codigo.length() - 1);
                             System.out.println("****** Lectura ******");
                             System.out.println("hex: " + hexStr);
                             System.out.println("Código: " + codigo);
                             System.out.println("port: " + port);
                             System.out.println("tag: " + tag);
                             if (tag == "LECTOR") {
-                                System.out.println("LECTOOOOOOOOOOOR");
                                 conn = new ConexionBaseDeDatosSellado();
 
                                 conn = new ConexionBaseDeDatosSellado();
@@ -104,12 +107,18 @@ public class PortCOM {
                                 //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
                                 Caja caja = getCajaPorCodigoUnitec(codigo);
 
-                                //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
-                                ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, port, Date.getDateString());
-
-                                //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
-                                Query.crearRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, caja, codigo);
-
+                                if (caja != null) {
+                                    //obtiene calibrador y lector a traves de lector
+                                    ResultSet resultSetGetLectorByPort = Query.getLectorByPort(conn, port);
+                                    if (resultSetGetLectorByPort != null) {
+                                        //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
+                                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
+                                        if (resultSetUsuariosEnLinea != null) {
+                                            //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
+                                            Query.crearRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, caja, codigo);
+                                        }
+                                    }
+                                }
                                 conn.getConnection().close();
                                 conn.disconnection();
 
@@ -136,8 +145,10 @@ public class PortCOM {
                                     //obtener rfid, linea, y calibrador desde portCOM
                                     ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibradorWherePortCOM(conn, port);
 
-                                    //crear usuario en linea
-                                    Query.insertUsuarioEnLinea(conn, resultSetUsuario, resultSetRFID);
+                                    if (resultSetRFID != null) {
+                                        //crear usuario en linea
+                                        Query.insertUsuarioEnLinea(conn, resultSetUsuario, resultSetRFID);
+                                    }
                                 }
 
                                 conn.getConnection().close();
@@ -159,12 +170,14 @@ public class PortCOM {
             }
         };
         thread = new Thread(runableCom);
+
         thread.start();
     }
 
     private Caja getCajaPorCodigoUnitec(String codigo) {
         connUnitec = new ConexionBaseDeDatosUnitec();
-        Caja caja = Query.getCajaPorCodigo(connUnitec, codigo);
+        //Caja caja = Query.getCajaPorCodigo(connUnitec, codigo);
+        Caja caja = Query.getCajaPorCodigo(conn, codigo);
         try {
             connUnitec.getConnection().close();
         } catch (SQLException ex) {

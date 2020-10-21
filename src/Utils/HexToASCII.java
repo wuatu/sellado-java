@@ -30,17 +30,22 @@ public class HexToASCII {
         //System.out.println("ASCII = " + builder.toString());
         return builder.toString();
     }
-    
+
     public static String hexToAscii(String hexStr) {
-    StringBuilder output = new StringBuilder("");
-    
-    for (int i = 0; i < hexStr.length(); i += 2) {
-        String str = hexStr.substring(i, i + 2);
-        output.append((char) Integer.parseInt(str, 16));
+        StringBuilder output = new StringBuilder("");
+
+        for (int i = 0; i < hexStr.length(); i += 2) {
+            String str = hexStr.substring(i, i + 2);
+            if (str.startsWith("0")) {
+                continue;
+            } else {
+                output.append((char) Integer.parseInt(str, 16));
+            }
+
+        }
+
+        return output.toString();
     }
-    
-    return output.toString();
-}
 
     public static boolean compruebaHex(String hex) {
         if (hex.length() % 2 != 0) {

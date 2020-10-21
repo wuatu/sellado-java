@@ -14,10 +14,18 @@ import java.sql.SQLException;
  * @author crist
  */
 public class ConexionBaseDeDatosUnitec {
+    /*
     private String database="UNITEC_DB";
     private String usuario="danich";
     private String password="danich";
     private String url="jdbc:mysql://192.168.1.115:3306/"+database+"?useUnicode=true&use"
+            +"HDBCCompilantTimezoneShift=true&useLegacyDatetimeCode=false&"
+            +"serverTimeZone=UTC";
+*/
+    private String database="danich_sellado";
+    private String usuario="root";
+    private String password="";
+    private String url="jdbc:mysql://127.0.0.1:3306/"+database+"?useUnicode=true&use"
             +"HDBCCompilantTimezoneShift=true&useLegacyDatetimeCode=false&"
             +"serverTimeZone=UTC";
     

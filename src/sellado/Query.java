@@ -121,15 +121,15 @@ public class Query {
                 while (resultSetRFID.next()) {
                     System.out.println("entre rfid");
                     // the mysql insert statement
-                    String query = " insert into registro_diario_usuario_en_linea (id_linea,nombre_linea,id_lector,nombre_lector,ip_lector,id_usuario,usuario_rut,nombre_usuario,apellido_usuario,rfid_usuario,fecha_inicio,hora_inicio,fecha_termino,hora_termino,id_calibrador,nombre_calibrador)"
+                    String query = " insert into registro_diario_usuario_en_linea (id_linea,nombre_linea,id_rfid,nombre_rfid,ip_rfid,id_usuario,usuario_rut,nombre_usuario,apellido_usuario,rfid_usuario,fecha_inicio,hora_inicio,fecha_termino,hora_termino,id_calibrador,nombre_calibrador)"
                             + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     // create the mysql insert preparedstatement
                     PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                     preparedStmt.setInt(1, resultSetRFID.getInt("linea.id"));
                     preparedStmt.setString(2, resultSetRFID.getString("linea.nombre"));
-                    preparedStmt.setInt(3, resultSetRFID.getInt("lector.id"));
-                    preparedStmt.setString(4, resultSetRFID.getString("lector.nombre"));
-                    preparedStmt.setString(5, resultSetRFID.getString("lector.ip"));
+                    preparedStmt.setInt(3, resultSetRFID.getInt("rfid.id"));
+                    preparedStmt.setString(4, resultSetRFID.getString("rfid.nombre"));
+                    preparedStmt.setString(5, resultSetRFID.getString("rfid.ip"));
                     preparedStmt.setInt(6, resultSetUsuario.getInt("id"));
                     preparedStmt.setString(7, resultSetUsuario.getString("rut"));
                     preparedStmt.setString(8, resultSetUsuario.getString("nombre"));
@@ -150,18 +150,44 @@ public class Query {
         }
     }
 
-    public static ResultSet getRegistroDiarioUsuariosEnLinea(ConexionBaseDeDatosSellado conn, String port, String fecha) {
+    public static ResultSet getRegistroDiarioUsuariosEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetLector, String fecha) {
         try {
-            Statement statement = conn.getConnection().createStatement();
-
             //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
-            ResultSet resultSet = statement.executeQuery("select * from registro_diario_usuario_en_linea "
-                    + "where port='(" + port + ")' and fecha_inicio like '(" + fecha + ")%' and fecha_termino=''");
-            return resultSet;
+            resultSetLector.beforeFirst();
+            while (resultSetLector.next()) {
+                String query = "select * from registro_diario_usuario_en_linea "
+                        + "where id_calibrador = ? and id_linea = ? and fecha_inicio <= ? and fecha_termino='' limit 1";
+                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                        ResultSet.CONCUR_UPDATABLE);
+                preparedStmt.setInt(1, resultSetLector.getInt("calibrador.id"));
+                preparedStmt.setInt(2, resultSetLector.getInt("linea.id"));
+                preparedStmt.setString(3, fecha);
+
+                ResultSet resultSet = preparedStmt.executeQuery();
+                if (!isEmptyResultSet(resultSet, "Usuario(s) en linea encontrado(s)", "Usuario(s) en linea NO encontrado(s)")) {
+                    return resultSet;
+                }
+            }
+
         } catch (SQLException ex) {
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
+        return null;
+    }
 
+    public static ResultSet getLectorByPort(ConexionBaseDeDatosSellado conn, String port) {
+        try {
+            String query = "select * from lector inner join linea on lector.fk_linea=linea.id inner join calibrador on linea.fk_calibrador=calibrador.id where ip = ? limit 1";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            preparedStmt.setString(1, port);
+            ResultSet resultSet = preparedStmt.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se obtuvo lector por puerto: " + port, "No se obtuvo lector por puerto: " + port)) {
+                return resultSet;
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
         return null;
     }
 
@@ -180,13 +206,14 @@ public class Query {
         return null;
     }
 
-    public static void crearRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSet, Caja caja, String codigo) {
-        if (resultSet != null) {
-            try {
-                while (resultSet.next()) {
+    public static void crearRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuariosEnLinea, ResultSet resultSetGetLectorByPort, Caja caja, String codigo) {
+        try {
+            resultSetUsuariosEnLinea.beforeFirst();
+            resultSetGetLectorByPort.beforeFirst();
+            while (resultSetGetLectorByPort.next()) {
+                while (resultSetUsuariosEnLinea.next()) {
                     // the mysql insert statement
-                    String query = " insert into registro_diario_caja_sellada ("
-                            + "id_calibrador, "
+                    String query = " insert into registro_diario_caja_sellada (id_calibrador, "
                             + "nombre_calibrador, "
                             + "id_linea, "
                             + "nombre_linea, "
@@ -209,23 +236,27 @@ public class Query {
                             + "correlativo_caja,"
                             + "ponderacion_caja,"
                             + "fecha_sellado,"
-                            + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            + "hora_sellado,"
+                            + "fecha_validacion,"
+                            + "hora_validacion,"
+                            + "id_apertura_cierre_de_turno)"
+                            + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                     // create the mysql insert preparedstatement
                     PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
-                    preparedStmt.setInt(1, resultSet.getInt("id_calibrador"));
-                    preparedStmt.setString(2, resultSet.getString("nombre_calibrador"));
-                    preparedStmt.setInt(3, resultSet.getInt("id_linea"));
-                    preparedStmt.setString(4, resultSet.getString("nombre_linea"));
-                    preparedStmt.setInt(5, resultSet.getInt("id_rfid"));
-                    preparedStmt.setString(6, resultSet.getString("nombre_rfid"));
-                    preparedStmt.setString(7, resultSet.getString("ip_rfid"));
-                    preparedStmt.setInt(8, resultSet.getInt("id_lector"));
-                    preparedStmt.setString(9, resultSet.getString("nombre_lector"));
-                    preparedStmt.setString(10, resultSet.getString("ip_lector"));
-                    preparedStmt.setInt(11, resultSet.getInt("id_usuario"));
-                    preparedStmt.setString(12, resultSet.getString("rut_usuario"));
-                    preparedStmt.setString(13, resultSet.getString("nombre_usuario"));
-                    preparedStmt.setString(14, resultSet.getString("apellido_usuario"));
+                    preparedStmt.setInt(1, resultSetUsuariosEnLinea.getInt("id_calibrador"));
+                    preparedStmt.setString(2, resultSetUsuariosEnLinea.getString("nombre_calibrador"));
+                    preparedStmt.setInt(3, resultSetUsuariosEnLinea.getInt("id_linea"));
+                    preparedStmt.setString(4, resultSetUsuariosEnLinea.getString("nombre_linea"));
+                    preparedStmt.setInt(5, resultSetUsuariosEnLinea.getInt("id_rfid"));
+                    preparedStmt.setString(6, resultSetUsuariosEnLinea.getString("nombre_rfid"));
+                    preparedStmt.setString(7, resultSetUsuariosEnLinea.getString("ip_rfid"));
+                    preparedStmt.setInt(8, resultSetGetLectorByPort.getInt("id"));
+                    preparedStmt.setString(9, resultSetGetLectorByPort.getString("nombre"));
+                    preparedStmt.setString(10, resultSetGetLectorByPort.getString("ip"));
+                    preparedStmt.setInt(11, resultSetUsuariosEnLinea.getInt("id_usuario"));
+                    preparedStmt.setString(12, resultSetUsuariosEnLinea.getString("usuario_rut"));
+                    preparedStmt.setString(13, resultSetUsuariosEnLinea.getString("nombre_usuario"));
+                    preparedStmt.setString(14, resultSetUsuariosEnLinea.getString("apellido_usuario"));
                     preparedStmt.setString(15, codigo);
                     preparedStmt.setInt(16, caja.getId());
                     preparedStmt.setString(17, caja.getEnvase());
@@ -235,14 +266,17 @@ public class Query {
                     preparedStmt.setString(21, caja.getCorrelativo());
                     preparedStmt.setString(22, caja.getPonderacion());
                     preparedStmt.setString(23, Date.getDateString());
-
+                    preparedStmt.setString(24, Date.getHourString());
+                    preparedStmt.setString(25, "");
+                    preparedStmt.setString(26, "");
+                    preparedStmt.setInt(27, 1);
                     // execute the preparedstatement
                     preparedStmt.execute();
-
                 }
-            } catch (SQLException ex) {
-                Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
             }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -285,24 +319,30 @@ public class Query {
         return null;
     }
 
-    public static Caja getCajaPorCodigo(ConexionBaseDeDatosUnitec conn, String codigo) {
+    public static Caja getCajaPorCodigo(ConexionBaseDeDatosSellado conn, String codigo) {
         try {
-            Statement statement = conn.getConnection().createStatement();
+            String query = "select * from caja_unitec where codigo like '%" + codigo + "%' limit 1";
+            PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            //Statement statement = conn.getConnection().createStatement();
             //Obtener registro caja por codigo
-            ResultSet resultSet = statement.executeQuery("select * from caja where codigo = '" + codigo + "' ");
-            Caja caja = null;
-            while (resultSet.next()) {
-                int id = resultSet.getInt("id");
-                String envase = resultSet.getString("envase");
-                String variedad = resultSet.getString("variedad");
-                String categoria = resultSet.getString("categoria");
-                String calibre = resultSet.getString("calibre");
-                String correlativo = resultSet.getString("correlativo");
-                String ponderacion = resultSet.getString("ponderacion");
-                caja = new Caja(id, envase, variedad, categoria, calibre, correlativo, ponderacion);
+            //ResultSet resultSet = statement.executeQuery("select * from caja_unitec where codigo = '" + codigo + "' limit 1");
+            if (!isEmptyResultSet(resultSet, "Se encotró caja por codigo:" + codigo, "No se encotró caja por codigo:" + codigo)) {
+                resultSet.beforeFirst();
+                Caja caja = null;
+                while (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String envase = resultSet.getString("envase");
+                    String variedad = resultSet.getString("variedad");
+                    String categoria = resultSet.getString("categoria");
+                    String calibre = resultSet.getString("calibre");
+                    String correlativo = resultSet.getString("correlativo");
+                    String ponderacion = resultSet.getString("ponderacion");
+                    caja = new Caja(id, envase, variedad, categoria, calibre, correlativo, ponderacion);
+                }
+                return caja;
             }
-            return caja;
-
         } catch (SQLException ex) {
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
