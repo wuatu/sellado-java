@@ -179,8 +179,8 @@ public class Sellado extends Application {
                 String ip = resultSetLector.getString("ip");
 
                 //creación de hilo lector validador
-                modbusTCP = new ModbusTCP(nombre, ip, waitingTime);
-                modbusTCPArray.add(modbusTCP);
+                //modbusTCP = new ModbusTCP(nombre, ip, waitingTime);
+                //modbusTCPArray.add(modbusTCP);
             }
         } catch (SQLException ex) {
             System.out.println("Error al obtener lector validador: " + ex.getMessage());

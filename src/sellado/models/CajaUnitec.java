@@ -9,7 +9,7 @@ package sellado.models;
  *
  * @author crist
  */
-public class Caja {
+public class CajaUnitec {
     int id;
     String envase;
     String variedad;
@@ -18,7 +18,7 @@ public class Caja {
     String correlativo;
     String ponderacion;
 
-    public Caja(int id, String envase, String variedad, String categoria, String calibre, String correlativo, String ponderacion) {
+    public CajaUnitec(int id, String envase, String variedad, String categoria, String calibre, String correlativo, String ponderacion) {
         this.id = id;
         this.envase = envase;
         this.variedad = variedad;

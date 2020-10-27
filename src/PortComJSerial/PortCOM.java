@@ -37,7 +37,8 @@ import baseDeDatos.ConexionBaseDeDatosSellado;
 import baseDeDatos.ConexionBaseDeDatosUnitec;
 import sellado.Query;
 import sellado.Sellado;
-import sellado.models.Caja;
+import sellado.models.CajaSellado;
+import sellado.models.CajaUnitec;
 
 /**
  *
@@ -61,7 +62,7 @@ public class PortCOM {
                     portCom.setTimeout(Integer.parseInt(timeout));
                     portCom.setConfig(baudRate, parity, stopBits, dataBits);
                 } catch (IOException ex) {
-                    /*
+                    
                     //alerta funciona alerta
                     Platform.runLater(() -> {
                         Alert alert = new Alert(AlertType.ERROR);
@@ -70,7 +71,7 @@ public class PortCOM {
                         alert.setContentText("Error al conectar dispositivo " + tag);
                         alert.showAndWait();
                     });
-                     */
+                     
 
                     Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -105,19 +106,34 @@ public class PortCOM {
                                     Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                                 }
                                 //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
-                                Caja caja = getCajaPorCodigoUnitec(codigo);
+                                CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(codigo);
 
-                                if (caja != null) {
+                                if (cajaUnitec != null) {
                                     //obtiene calibrador y lector a traves de lector
                                     ResultSet resultSetGetLectorByPort = Query.getLectorByPort(conn, port);
                                     if (resultSetGetLectorByPort != null) {
                                         //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
                                         ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
                                         if (resultSetUsuariosEnLinea != null) {
-                                            //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
-                                            Query.crearRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, caja, codigo);
+                                            //busca caja en base de datos sellado para obtener ponderación de caja
+                                            CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getEnvase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
+
+                                            //obtener id de apertura_cierre_de_turno
+                                            ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
+                                            if (resultSetAperturaCierreDeTurno != null) {
+                                                //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
+                                                Query.crearRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, codigo);
+                                            } else {
+                                                System.out.println("resultSetAperturaCierreDeTurno es nulo");
+                                            }
+                                        } else {
+                                            System.out.println("resultSetUsuariosEnLinea es nulo");
                                         }
+                                    } else {
+                                        System.out.println("resultSetGetLectorByPort es nulo");
                                     }
+                                } else {
+                                    System.out.println("cajaUnitec es nulo");
                                 }
                                 conn.getConnection().close();
                                 conn.disconnection();
@@ -135,20 +151,29 @@ public class PortCOM {
 
                                 if (resultSetUsuario != null) {
 
-                                    ResultSet getUsuarioEnLinea = Query.getUsuarioEnLinea(conn, resultSetUsuario);
+                                    //obtener id de apertura_cierre_de_turno
+                                    ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
 
-                                    if (getUsuarioEnLinea != null) {
-                                        //verificar usuario en linea, actualizar fecha_termino
-                                        Query.updateFechaTerminoUsuarioEnLinea(conn, resultSetUsuario);
+                                    if (resultSetAperturaCierreDeTurno != null) {
+                                        ResultSet resultSetUsuarioEnLineaPorFecha = Query.getUsuarioEnLineaPorFecha(conn, resultSetUsuario);
+                                        if (resultSetUsuarioEnLineaPorFecha != null) {
+                                            //verificar si usuario en linea se esta registrando nuevamente en misma linea para restringir registro
+                                            if (!Query.isUsuarioEnLineaEnMismaLinea(resultSetUsuarioEnLineaPorFecha, port)) {
+                                                //actualizar fecha_termino
+                                                Query.updateFechaTerminoUsuarioEnLinea(conn, resultSetUsuario);
+                                                insertarUsuarioEnLinea(resultSetUsuario,resultSetAperturaCierreDeTurno,port);                                                
+                                            } else {
+                                                System.out.println("isUsuarioEnLineaEnMismaLinea usuario ya esta asignado a esta línea");
+                                            }
+                                        } else {
+                                            System.out.println("getUsuarioEnLinea es nulo por tanto se debe agregar usuario a linea");
+                                            insertarUsuarioEnLinea(resultSetUsuario,resultSetAperturaCierreDeTurno,port);
+                                        }
+                                    } else {
+                                        System.out.println("resultSetAperturaCierreDeTurno es nulo");
                                     }
-
-                                    //obtener rfid, linea, y calibrador desde portCOM
-                                    ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibradorWherePortCOM(conn, port);
-
-                                    if (resultSetRFID != null) {
-                                        //crear usuario en linea
-                                        Query.insertUsuarioEnLinea(conn, resultSetUsuario, resultSetRFID);
-                                    }
+                                } else {
+                                    System.out.println("resultSetUsuario es nulo");
                                 }
 
                                 conn.getConnection().close();
@@ -174,10 +199,22 @@ public class PortCOM {
         thread.start();
     }
 
-    private Caja getCajaPorCodigoUnitec(String codigo) {
+    public void insertarUsuarioEnLinea(ResultSet resultSetUsuario, ResultSet resultSetAperturaCierreDeTurno, String port) {
+        //obtener rfid, linea, y calibrador desde portCOM
+        ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibradorWherePortCOM(conn, port);
+
+        if (resultSetRFID != null) {
+            //crear usuario en linea
+            Query.insertUsuarioEnLinea(conn, resultSetUsuario, resultSetRFID, resultSetAperturaCierreDeTurno);
+        } else {
+            System.out.println("resultSetRFID es nulo");
+        }
+    }
+
+    private CajaUnitec getCajaPorCodigoUnitec(String codigo) {
         connUnitec = new ConexionBaseDeDatosUnitec();
         //Caja caja = Query.getCajaPorCodigo(connUnitec, codigo);
-        Caja caja = Query.getCajaPorCodigo(conn, codigo);
+        CajaUnitec caja = Query.getCajaPorCodigoUnitec(conn, codigo);
         try {
             connUnitec.getConnection().close();
         } catch (SQLException ex) {
