@@ -31,7 +31,7 @@ public class ModbusTCP {
 
     ModbusTCPTransaction trans = null;
     TCPMasterConnection tcpMasterConnection = null; //the connection
-    public Thread thread = null;    
+    public Thread thread = null;
 
     public ModbusTCP(String nombre, String ip, int waitingTime) {
         try {
@@ -71,6 +71,7 @@ public class ModbusTCP {
                         try {
                             trans.execute();
                         } catch (ModbusException ex) {
+                            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                             System.out.println("Alerta 6");
                             Alert alert = new Alert(Alert.AlertType.ERROR);
                             alert.setTitle("Alerta 6");
@@ -108,21 +109,9 @@ public class ModbusTCP {
                                 try {
                                     trans.execute();
                                 } catch (ModbusSlaveException ex) {
-                                    System.out.println("Alerta 1");
-                                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                                    alert.setTitle("Alerta 1");
-                                    alert.setHeaderText("Error sensor validador");
-                                    alert.setContentText(ex.getMessage());
-                                    alert.showAndWait();
-                                    System.exit(1);
+                                    Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusSlaveException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                                 } catch (ModbusException ex) {
-                                    System.out.println("Alerta 2");
-                                    Alert alert = new Alert(Alert.AlertType.ERROR);
-                                    alert.setTitle("Alerta 2");
-                                    alert.setHeaderText("Error sensor validador");
-                                    alert.setContentText(ex.getMessage());
-                                    alert.showAndWait();
-                                    System.exit(1);
+                                    Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                                 }
                                 res = (ReadMultipleRegistersResponse) trans.getResponse();
                                 res = (ReadMultipleRegistersResponse) trans.getResponse();
@@ -133,50 +122,29 @@ public class ModbusTCP {
                                 }
                                 String codigo = HexToASCII.convertHexToASCII(hex);
                                 //System.out.println("****** CODIGO LEIDO ******");
-                                System.out.println("Código: " + codigo);                                
-                                
+                                System.out.println("Código: " + codigo);
+
                                 //Verificar a traves de lector verificador, updatear valores is_verificado, is_before_time tabla registro_diario_caja_sellada
                                 Query.updateRegistroDiarioCajaCerradaCodigo(codigo, waitingTime);
-                                
+
                             }
 
                         }
                         try {
                             Thread.sleep(500);
                         } catch (InterruptedException ex) {
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            System.out.println("Alerta 3");
-                            alert.setTitle("Alerta 3");
-                            alert.setHeaderText("Error sensor validador");
-                            alert.setContentText(ex.getMessage());
-                            alert.showAndWait();
-                            System.exit(1);
+                            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador InterruptedException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                         secondCodeReader = 1;
                     } while (true);
                 }
             };
 
-            /*
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("Alerta");
-                            alert.setHeaderText("Error sensor validador");
-                            alert.setContentText(ex.getMessage());
-                            alert.showAndWait();
-                            ex.printStackTrace();
-                            System.exit(1);
-             */
             thread = new Thread(runable);
             thread.start();
 
         } catch (Exception ex) {
-            System.out.println("Alerta 4");
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Alerta 4");
-            alert.setHeaderText("Error sensor validador");
-            alert.setContentText(ex.getMessage());
-            alert.showAndWait();
-            System.exit(1);
+            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador Exception: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
         }
     }
 
@@ -188,13 +156,7 @@ public class ModbusTCP {
         try {
             trans.execute();
         } catch (ModbusException ex) {
-            System.out.println("Alerta 6");
-            Alert alert = new Alert(Alert.AlertType.ERROR);
-            alert.setTitle("Alerta 6");
-            alert.setHeaderText("Error de conexión sensor validador");
-            alert.setContentText("Sensor desconectado: " + ex.getMessage());
-            alert.showAndWait();
-            System.exit(1);
+            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
         }
         ReadMultipleRegistersResponse res = (ReadMultipleRegistersResponse) trans.getResponse();
         return res.getRegisters()[0].getValue();

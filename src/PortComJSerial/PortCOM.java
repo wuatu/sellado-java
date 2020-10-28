@@ -48,9 +48,6 @@ public class PortCOM {
 
     SerialPort portCom;
     public Thread thread = null;
-    ConexionBaseDeDatosSellado conn = null;
-    Statement statement = null;
-    ConexionBaseDeDatosUnitec connUnitec = null;
 
     public PortCOM(String calibrador, String linea, String tag, String nombre, String port, BaudRate baudRate, Parity parity, StopBits stopBits, DataBits dataBits, String timeout) {
         // Get a new instance of SerialPort by opening a port.
@@ -62,7 +59,8 @@ public class PortCOM {
                     portCom.setTimeout(Integer.parseInt(timeout));
                     portCom.setConfig(baudRate, parity, stopBits, dataBits);
                 } catch (IOException ex) {
-                    
+                    //inserta registro dev
+                    Query.insertRegistroDev("Error serial port", "Error al conectar puerto: " + port + ", dispositivo: " + tag, Utils.Date.getDateString(), Utils.Date.getHourString());
                     //alerta funciona alerta
                     Platform.runLater(() -> {
                         Alert alert = new Alert(AlertType.ERROR);
@@ -71,8 +69,6 @@ public class PortCOM {
                         alert.setContentText("Error al conectar dispositivo " + tag);
                         alert.showAndWait();
                     });
-                     
-
                     Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
@@ -96,17 +92,9 @@ public class PortCOM {
                             System.out.println("port: " + port);
                             System.out.println("tag: " + tag);
                             if (tag == "LECTOR") {
-                                conn = new ConexionBaseDeDatosSellado();
-
-                                conn = new ConexionBaseDeDatosSellado();
-                                try {
-                                    statement = conn.getConnection().createStatement();
-                                } catch (SQLException ex) {
-                                    System.out.println("Error al crear conexion en portCom statement: " + ex.getMessage());
-                                    Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
-                                }
+                                ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
                                 //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
-                                CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(codigo);
+                                CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(conn, codigo);
 
                                 if (cajaUnitec != null) {
                                     //obtiene calibrador y lector a traves de lector
@@ -122,7 +110,7 @@ public class PortCOM {
                                             ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
                                             if (resultSetAperturaCierreDeTurno != null) {
                                                 //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
-                                                Query.crearRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, codigo);
+                                                Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, codigo);
                                             } else {
                                                 System.out.println("resultSetAperturaCierreDeTurno es nulo");
                                             }
@@ -137,37 +125,28 @@ public class PortCOM {
                                 }
                                 conn.getConnection().close();
                                 conn.disconnection();
-
+                                conn = null;
                             } else if (tag == "RFID") {
-                                conn = new ConexionBaseDeDatosSellado();
-                                try {
-                                    statement = conn.getConnection().createStatement();
-                                } catch (SQLException ex) {
-                                    System.out.println("Error al crear conexion en portCom statement: " + ex.getMessage());
-                                    Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
-                                }
+                                ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
                                 //obtener usuario por codigo rfid
                                 ResultSet resultSetUsuario = Query.getUsuarioPorRFID(conn, codigo);
-
                                 if (resultSetUsuario != null) {
-
                                     //obtener id de apertura_cierre_de_turno
                                     ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
-
                                     if (resultSetAperturaCierreDeTurno != null) {
                                         ResultSet resultSetUsuarioEnLineaPorFecha = Query.getUsuarioEnLineaPorFecha(conn, resultSetUsuario);
                                         if (resultSetUsuarioEnLineaPorFecha != null) {
                                             //verificar si usuario en linea se esta registrando nuevamente en misma linea para restringir registro
-                                            if (!Query.isUsuarioEnLineaEnMismaLinea(resultSetUsuarioEnLineaPorFecha, port)) {
+                                            if (!Query.isUsuarioEnLineaEnMismaLinea(conn, resultSetUsuarioEnLineaPorFecha, port)) {
                                                 //actualizar fecha_termino
                                                 Query.updateFechaTerminoUsuarioEnLinea(conn, resultSetUsuario);
-                                                insertarUsuarioEnLinea(resultSetUsuario,resultSetAperturaCierreDeTurno,port);                                                
+                                                insertarUsuarioEnLinea(conn, resultSetUsuario, resultSetAperturaCierreDeTurno, port);
                                             } else {
                                                 System.out.println("isUsuarioEnLineaEnMismaLinea usuario ya esta asignado a esta línea");
                                             }
                                         } else {
                                             System.out.println("getUsuarioEnLinea es nulo por tanto se debe agregar usuario a linea");
-                                            insertarUsuarioEnLinea(resultSetUsuario,resultSetAperturaCierreDeTurno,port);
+                                            insertarUsuarioEnLinea(conn, resultSetUsuario, resultSetAperturaCierreDeTurno, port);
                                         }
                                     } else {
                                         System.out.println("resultSetAperturaCierreDeTurno es nulo");
@@ -175,19 +154,22 @@ public class PortCOM {
                                 } else {
                                     System.out.println("resultSetUsuario es nulo");
                                 }
-
                                 conn.getConnection().close();
                                 conn.disconnection();
+                                conn = null;
                             }
                         }
                         Thread.sleep(100);
                     } catch (IOException ex) {
+                        Query.insertRegistroDev("Error PortCom", "Error IOException: " + ex.getMessage() + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         System.out.println("error IOException portCom: " + ex.getMessage());
                         Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (InterruptedException ex) {
+                        Query.insertRegistroDev("Error PortCom", "Error InterruptedException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         System.out.println("error InterruptedException portCom: " + ex.getMessage());
                         Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (SQLException ex) {
+                        Query.insertRegistroDev("Error PortCom", "Error SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         System.out.println("error SQLException portCom: " + ex.getMessage());
                         Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
                     }
@@ -199,7 +181,7 @@ public class PortCOM {
         thread.start();
     }
 
-    public void insertarUsuarioEnLinea(ResultSet resultSetUsuario, ResultSet resultSetAperturaCierreDeTurno, String port) {
+    public void insertarUsuarioEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuario, ResultSet resultSetAperturaCierreDeTurno, String port) {
         //obtener rfid, linea, y calibrador desde portCOM
         ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibradorWherePortCOM(conn, port);
 
@@ -211,16 +193,17 @@ public class PortCOM {
         }
     }
 
-    private CajaUnitec getCajaPorCodigoUnitec(String codigo) {
-        connUnitec = new ConexionBaseDeDatosUnitec();
-        //Caja caja = Query.getCajaPorCodigo(connUnitec, codigo);
+    private CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosSellado conn, String codigo) {
+        ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
         CajaUnitec caja = Query.getCajaPorCodigoUnitec(conn, codigo);
         try {
             connUnitec.getConnection().close();
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom", "Error al cerrar conexion en base de datos Unitec: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(ModbusTCP.class.getName()).log(Level.SEVERE, null, ex);
         }
         connUnitec.disconnection();
+        connUnitec = null;
         return caja;
     }
 }

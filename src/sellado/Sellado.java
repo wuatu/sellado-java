@@ -20,6 +20,8 @@ import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
 
@@ -33,57 +35,59 @@ public class Sellado extends Application {
     ArrayList<ModbusTCP> modbusTCPArray = new ArrayList<>();
     PortCOM portCOM = null;
     ModbusTCP modbusTCP = null;
-    ConexionBaseDeDatosSellado conn = null;
     private static String TagLector = "LECTOR";
     private static String TagRFID = "RFID";
 
     @Override
     public void start(Stage primaryStage) {
 
-        conn = new ConexionBaseDeDatosSellado();
+        //obtener tiempo maximo de espera de caja 
+        int waitingTime = Query.getWaitingTime();
 
+        //obtener lector validador
+        ResultSet resultSetLectorValidador = Query.getLectorValidador();
+        //crear hilo lector validador
+        //crearThreadLectorValidador(resultSetLectorValidador, waitingTime);
+
+        //obtener lectores en linea de tabla "linea" 
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+        ResultSet resultSetLectores = Query.getLectoresJoinLineaJoinCalibrador(conn);
+        //crear hilo por cada lector        
+        crearThreadPorCadaLector(resultSetLectores);
         try {
-            //obtener tiempo maximo de espera de caja 
-            int waitingTime = Query.getWaitingTime(conn);
-
-            //obtener lector validador
-            ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
-            //crear hilo lector validador
-            crearThreadLectorValidador(resultSetLectorValidador, waitingTime);
-
-            //obtener lectores en linea de tabla "linea" 
-            ResultSet resultSetLectores = Query.getLectoresJoinLineaJoinCalibrador(conn);
-            //crear hilo por cada lector
-            crearThreadPorCadaLector(resultSetLectores);
-
-            //obtener RFID de tabla "rfid"
-            ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibrador(conn);
-            //crear hilo por cada rfid
-            crearThreadPorCadaRFID(resultSetRFID);
-
-            System.out.println("Configuracion inicial realizada satisfactoriamente");
             conn.getConnection().close();
-            conn.disconnection();
-
-        } catch (SQLException ex) {
-            System.out.println("Error tipo SQLException: " + ex.getMessage());
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
         }
-        Button btn = new Button();
-        btn.setText("Say 'Hello World'");
-        btn.setOnAction(new EventHandler<ActionEvent>() {
+        conn.disconnection();
+        conn = null;
 
-            @Override
-            public void handle(ActionEvent event) {
-                System.out.println("Hello World!");
-            }
-        });
+        //obtener RFID de tabla "rfid"
+        conn = new ConexionBaseDeDatosSellado();
+        ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibrador(conn);
+        //crear hilo por cada rfid
+        crearThreadPorCadaRFID(resultSetRFID);
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
+
+        System.out.println("Configuracion inicial realizada satisfactoriamente");
+
+        Image image1 = new Image(getClass().getResourceAsStream("/images/logo.png"));
+        ImageView imageView1 = new ImageView(image1);
+        imageView1.setX(50);
+        imageView1.setY(50);
 
         StackPane root = new StackPane();
-        root.getChildren().add(btn);
+        root.getChildren().add(imageView1);
 
-        Scene scene = new Scene(root, 300, 250);
+        Scene scene = new Scene(root, 600, 250);
 
-        primaryStage.setTitle("Hello World!");
+        primaryStage.setTitle("***Danich*** conexión a periféricos");
         primaryStage.setScene(scene);
         primaryStage.show();
         primaryStage.setOnHiding(event -> {
@@ -134,6 +138,7 @@ public class Sellado extends Application {
                 portCOMArray.add(portCOM);
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error Sellado", "Error al obtener RFID SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error al obtener RFID: " + ex.getMessage());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -167,6 +172,7 @@ public class Sellado extends Application {
                 portCOMArray.add(portCOM);
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error Sellado", "Error al obtener lector SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error al obtener lectores: " + ex.getMessage());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -177,12 +183,9 @@ public class Sellado extends Application {
             while (resultSetLector.next()) {
                 String nombre = resultSetLector.getString("nombre");
                 String ip = resultSetLector.getString("ip");
-
-                //creación de hilo lector validador
-                //modbusTCP = new ModbusTCP(nombre, ip, waitingTime);
-                //modbusTCPArray.add(modbusTCP);
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error Sellado", "Error al obtener lector validador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error al obtener lector validador: " + ex.getMessage());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }

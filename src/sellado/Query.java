@@ -24,14 +24,27 @@ import sellado.models.CajaUnitec;
  */
 public class Query {
 
-    //private static ConexionBaseDeDatosSellado conn = null;
     public static ResultSet getRFIDJoinLineaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
         try {
             Statement statement = conn.getConnection().createStatement();
-            //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
             ResultSet resultSet = statement.executeQuery("select * from rfid inner join linea on rfid.fk_linea = linea.id inner join calibrador on linea.fk_calibrador = calibrador.id");
             return resultSet;
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener RFIDJoinLineaJoinCalibrador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public static ResultSet getLectoresJoinLineaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
+        try {
+            Statement statement = conn.getConnection().createStatement();
+            //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
+            ResultSet resultSet = statement.executeQuery("select * from lector inner join linea on lector.fk_linea = linea.id inner join calibrador on linea.fk_calibrador = calibrador.id");
+
+            return resultSet;
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectoresJoinLineaJoinCalibrador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -44,15 +57,13 @@ public class Query {
                     ResultSet.CONCUR_UPDATABLE);
             preparedStmt.setString(1, portCom);
             ResultSet resultSet = preparedStmt.executeQuery();
-
             if (!isEmptyResultSet(resultSet, "Existe linea para este puerto:" + portCom, "No existe linea para este puerto: " + portCom)) {
                 return resultSet;
             }
-
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener RFIDJoinLineaJoinCalibradorWherePortCOM SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         return null;
     }
 
@@ -74,25 +85,10 @@ public class Query {
         return false;
     }
 
-    public static ResultSet getLectoresJoinLineaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
-        try {
-            Statement statement = conn.getConnection().createStatement();
-            //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
-            ResultSet resultSet = statement.executeQuery("select * from lector inner join linea on lector.fk_linea = linea.id inner join calibrador on linea.fk_calibrador = calibrador.id");
-            return resultSet;
-        } catch (SQLException ex) {
-            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
-        }
-
-        return null;
-    }
-
     public static void updateFechaTerminoUsuarioEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuario) {
-
         try {
             resultSetUsuario.beforeFirst();
             while (resultSetUsuario.next()) {
-
                 String query = "update registro_diario_usuario_en_linea set fecha_termino = ?, hora_termino = ? where id_usuario = ? and fecha_termino=''";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, Date.getDateString());
@@ -100,8 +96,8 @@ public class Query {
                 preparedStmt.setInt(3, resultSetUsuario.getInt("id"));
                 preparedStmt.executeUpdate();
             }
-
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener updateFechaTerminoUsuarioEnLinea SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error tipo SQLException portCOM metodo updateFechaTerminoUsuarioEnLinea: " + ex.getMessage());
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -141,6 +137,7 @@ public class Query {
                 }
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al insertar insertUsuarioEnLinea SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -157,14 +154,13 @@ public class Query {
                 preparedStmt.setInt(1, resultSetLector.getInt("calibrador.id"));
                 preparedStmt.setInt(2, resultSetLector.getInt("linea.id"));
                 preparedStmt.setString(3, fecha);
-
                 ResultSet resultSet = preparedStmt.executeQuery();
                 if (!isEmptyResultSet(resultSet, "Usuario(s) en linea encontrado(s)", "Usuario(s) en linea NO encontrado(s)")) {
                     return resultSet;
                 }
             }
-
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRegistroDiarioUsuariosEnLinea SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -181,27 +177,43 @@ public class Query {
                 return resultSet;
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectorByPort SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
-    public static ResultSet getRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, String codigo) {
+    public static ResultSet getRegistroDiarioCajaSellada(String codigo) {
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
         try {
             String fecha = Date.getDateString();
             Statement statement = conn.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from registro_diario_caja_sellada"
                     + "where codigo_de_barra='" + codigo + "' and fecha_sellado >= '" + fecha + "' and fecha_validacion=''"
                     + "order by fecha_sellado desc, hora_sellado desc limit 1");
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
             return resultSet;
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRegistroDiarioCajaSellada SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
         return null;
     }
 
-    public static void crearRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuariosEnLinea, ResultSet resultSetGetLectorByPort, ResultSet crearRegistroDiarioCajaSellada, CajaSellado caja, String codigo) {
+    public static void insertRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuariosEnLinea, ResultSet resultSetGetLectorByPort, ResultSet crearRegistroDiarioCajaSellada, CajaSellado caja, String codigo) {
         try {
             resultSetUsuariosEnLinea.beforeFirst();
             resultSetGetLectorByPort.beforeFirst();
@@ -255,11 +267,11 @@ public class Query {
                         preparedStmt.setString(13, resultSetUsuariosEnLinea.getString("nombre_usuario"));
                         preparedStmt.setString(14, resultSetUsuariosEnLinea.getString("apellido_usuario"));
                         preparedStmt.setString(15, codigo);
-                        if(caja!=null){
+                        if (caja != null) {
                             preparedStmt.setInt(16, caja.getId());
                         } else {
-                            preparedStmt.setInt(16, 0);
-                        }                        
+                            preparedStmt.setInt(16, -1);
+                        }
                         preparedStmt.setString(17, caja.getEnvase());
                         preparedStmt.setString(18, caja.getVariedad());
                         preparedStmt.setString(19, caja.getCategoria());
@@ -276,6 +288,7 @@ public class Query {
                 }
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al insertar insertRegistroDiarioCajaSellada SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -291,6 +304,7 @@ public class Query {
             }
 
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getAperturaCierreDeTurno SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -301,37 +315,42 @@ public class Query {
             String query = "select * from usuario where rfid='" + codigoRFID + "' limit 1";
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
-            //Statement statement = conn.getConnection().createStatement();
             ResultSet resultSet = preparedStatement.executeQuery();
-
             //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
-            //ResultSet resultSet = statement.executeQuery("select * from usuario where rfid='" + codigoRFID + "' limit 1");
             if (!isEmptyResultSet(resultSet, "Existe usuario por codigo RFID: " + codigoRFID, "No existe usuario por codigo RFID: " + codigoRFID)) {
                 return resultSet;
             }
-
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getUsuarioPorRFID SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
-
         return null;
     }
 
-    public static void crearUsuarioEnLínea(ConexionBaseDeDatosSellado conn) {
-        // the mysql insert statement
-        String query = " insert into registro_diario_usuario_en_linea (first_name, last_name, date_created, is_admin, num_points)"
-                + " values (?, ?, ?, ?, ?)";
-    }
-
-    public static ResultSet getLectorValidador(ConexionBaseDeDatosSellado conn) {
+    public static ResultSet getLectorValidador() {
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
         try {
             Statement statement = conn.getConnection().createStatement();
-            //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
             ResultSet resultSet = statement.executeQuery("select * from lector_validador");
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
             return resultSet;
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectorValidador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
         return null;
     }
 
@@ -341,9 +360,6 @@ public class Query {
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             ResultSet resultSet = preparedStatement.executeQuery();
-            //Statement statement = conn.getConnection().createStatement();
-            //Obtener registro caja por codigo
-            //ResultSet resultSet = statement.executeQuery("select * from caja_unitec where codigo = '" + codigo + "' limit 1");
             if (!isEmptyResultSet(resultSet, "Se encotró caja por codigo:" + envaseUnitec, "No se encotró caja por codigo:" + envaseUnitec)) {
                 resultSet.beforeFirst();
                 CajaSellado caja = null;
@@ -360,6 +376,7 @@ public class Query {
                 return caja;
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getCajaPorCodigoSellado SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -371,9 +388,6 @@ public class Query {
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             ResultSet resultSet = preparedStatement.executeQuery();
-            //Statement statement = conn.getConnection().createStatement();
-            //Obtener registro caja por codigo
-            //ResultSet resultSet = statement.executeQuery("select * from caja_unitec where codigo = '" + codigo + "' limit 1");
             if (!isEmptyResultSet(resultSet, "Se encotró caja por codigo:" + codigo, "No se encotró caja por codigo:" + codigo)) {
                 resultSet.beforeFirst();
                 CajaUnitec caja = null;
@@ -390,8 +404,16 @@ public class Query {
                 return caja;
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query Unitec", "Error al obtener getCajaPorCodigoUnitec SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
         return null;
     }
 
@@ -407,23 +429,24 @@ public class Query {
                 if (!isEmptyResultSet(resultSet, "Usuario en línea encontrado", "No existe registro para usuario en línea ")) {
                     return resultSet;
                 }
-
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getUsuarioEnLineaPorFecha SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
 
-    public static boolean isUsuarioEnLineaEnMismaLinea(ResultSet resultSetUsuarioEnLineaPorFecha, String port) {
+    public static boolean isUsuarioEnLineaEnMismaLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuarioEnLineaPorFecha, String port) {
         try {
             resultSetUsuarioEnLineaPorFecha.beforeFirst();
             while (resultSetUsuarioEnLineaPorFecha.next()) {
-                if(resultSetUsuarioEnLineaPorFecha.getString("ip_rfid").equalsIgnoreCase(port)){
+                if (resultSetUsuarioEnLineaPorFecha.getString("ip_rfid").equalsIgnoreCase(port)) {
                     return true;
                 }
             }
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener isUsuarioEnLineaEnMismaLinea SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
@@ -431,7 +454,7 @@ public class Query {
 
     public static void updateRegistroDiarioCajaCerradaCodigo(String codigo, int waitingTime) {
         ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
-        ResultSet resultSet = getRegistroDiarioCajaSellada(conn, codigo);
+        ResultSet resultSet = getRegistroDiarioCajaSellada(codigo);
         try {
             String horaSellado = null;
             String fechaSellado = null;
@@ -456,6 +479,7 @@ public class Query {
             preparedStmt.executeUpdate();
 
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error update updateRegistroDiarioCajaCerradaCodigo SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error tipo SQLException portCOM metodo updateFechaTerminoUsuarioEnLinea: " + ex.getMessage());
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -467,7 +491,8 @@ public class Query {
         conn.disconnection();
     }
 
-    public static int getWaitingTime(ConexionBaseDeDatosSellado conn) {
+    public static int getWaitingTime() {
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
         try {
             int waitingTime = -1;
             Statement statement = conn.getConnection().createStatement();
@@ -475,11 +500,73 @@ public class Query {
             while (resultSet.next()) {
                 waitingTime = resultSet.getInt("max_wait_time");
             }
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
             return waitingTime;
         } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getWaitingTime SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
         return -1;
+    }
+
+    public static void insertRegistroDev(String nombre, String registro, String fecha, String hora) {
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+        try {
+            String query = " insert into registro_dev (nombre,registro,fecha, hora)"
+                    + " values (?, ?, ?, ?)";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+            preparedStmt.setString(1, nombre);
+            preparedStmt.setString(2, registro);
+            preparedStmt.setString(3, fecha);
+            preparedStmt.setString(4, hora);
+            preparedStmt.execute();
+        } catch (SQLException ex) {
+            Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
+    }
+
+    public static void insertRegistroProduccion(int idColaborador, String nombre, String apellido, String registro, String fecha, String hora) {
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+        try {
+            String query = " insert into registro_dev (id_colaborador, rut_colaborador, nombre_colaborador, apellido_colaborador, registro, fecha, hora)"
+                    + " values (?, ?, ?, ?, ?, ?)";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+            preparedStmt.setString(1, nombre);
+            preparedStmt.setString(2, registro);
+            preparedStmt.setString(3, fecha);
+            preparedStmt.setString(4, hora);
+            preparedStmt.execute();
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al insert insertRegistroProduccion SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
     }
 
 }
