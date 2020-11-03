@@ -44,13 +44,21 @@ public class Sellado extends Application {
         //obtener tiempo maximo de espera de caja 
         int waitingTime = Query.getWaitingTime();
 
-        //obtener lector validador
-        ResultSet resultSetLectorValidador = Query.getLectorValidador();
-        //crear hilo lector validador
-        //crearThreadLectorValidador(resultSetLectorValidador, waitingTime);
-
-        //obtener lectores en linea de tabla "linea" 
         ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+        //obtener lector validador
+        ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
+        //crear hilo lector validador
+        crearThreadLectorValidador(conn, resultSetLectorValidador, waitingTime); 
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex1) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+        }
+        conn.disconnection();
+        conn = null;
+        
+        //obtener lectores en linea de tabla "linea" 
+        conn = new ConexionBaseDeDatosSellado();
         ResultSet resultSetLectores = Query.getLectoresJoinLineaJoinCalibrador(conn);
         //crear hilo por cada lector        
         crearThreadPorCadaLector(resultSetLectores);
@@ -87,7 +95,7 @@ public class Sellado extends Application {
 
         Scene scene = new Scene(root, 600, 250);
 
-        primaryStage.setTitle("***Danich*** conexión a periféricos");
+        primaryStage.setTitle("***Danich*** conexión a dispositivos");
         primaryStage.setScene(scene);
         primaryStage.show();
         primaryStage.setOnHiding(event -> {
@@ -178,11 +186,15 @@ public class Sellado extends Application {
         }
     }
 
-    private void crearThreadLectorValidador(ResultSet resultSetLector, int waitingTime) {
+    private void crearThreadLectorValidador(ConexionBaseDeDatosSellado conn, ResultSet resultSetLector, int waitingTime) {
         try {
             while (resultSetLector.next()) {
                 String nombre = resultSetLector.getString("nombre");
                 String ip = resultSetLector.getString("ip");
+                
+                //creación de hilo lector validador
+                modbusTCP=new ModbusTCP(nombre, ip, waitingTime);
+                modbusTCPArray.add(modbusTCP);
             }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error Sellado", "Error al obtener lector validador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());

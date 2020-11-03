@@ -177,7 +177,6 @@ public class PortCOM {
             }
         };
         thread = new Thread(runableCom);
-
         thread.start();
     }
 

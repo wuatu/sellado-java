@@ -39,9 +39,7 @@ public class Query {
     public static ResultSet getLectoresJoinLineaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
         try {
             Statement statement = conn.getConnection().createStatement();
-            //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)
             ResultSet resultSet = statement.executeQuery("select * from lector inner join linea on lector.fk_linea = linea.id inner join calibrador on linea.fk_calibrador = calibrador.id");
-
             return resultSet;
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectoresJoinLineaJoinCalibrador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
@@ -327,30 +325,15 @@ public class Query {
         return null;
     }
 
-    public static ResultSet getLectorValidador() {
-        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+    public static ResultSet getLectorValidador(ConexionBaseDeDatosSellado conn) {        
         try {
             Statement statement = conn.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from lector_validador");
-            try {
-                conn.getConnection().close();
-            } catch (SQLException ex1) {
-                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-            conn.disconnection();
-            conn = null;
             return resultSet;
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectorValidador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex1) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-        }
-        conn.disconnection();
-        conn = null;
         return null;
     }
 
@@ -407,13 +390,6 @@ public class Query {
             Query.insertRegistroDev("Error PortCom Query Unitec", "Error al obtener getCajaPorCodigoUnitec SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex1) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-        }
-        conn.disconnection();
-        conn = null;
         return null;
     }
 
