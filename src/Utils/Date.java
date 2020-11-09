@@ -28,14 +28,14 @@ public class Date {
     
     public static String getHourString() {
         java.util.Date date = new java.util.Date();
-        SimpleDateFormat sdf = new SimpleDateFormat("hh:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("America/Santiago"));
         String hourtring = sdf.format(date);
         return hourtring;
     }
     
     public static java.util.Date getDateParseStringToDate(String fecha, String hora) {
-        SimpleDateFormat sdf = new SimpleDateFormat("dd-MMM-yyyy HH:mm:ss");
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("America/Santiago"));
         try {
             return sdf.parse(fecha+" "+hora);            

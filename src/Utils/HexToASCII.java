@@ -54,4 +54,14 @@ public class HexToASCII {
         }
         return true;
     }
+
+    public static String limpiarString(String str) {
+        str = str.replaceAll(" ", "");
+        str = str.replaceAll("\n", "");
+        str = str.replaceAll("[^\\w\\s]", "");
+        str = str.replaceAll("[^\\dA-Za-z]", "");
+        str = str.replaceAll("[\\W]|_", "");
+        str = str.replaceAll("[^a-zA-Z0-9]", ""); 
+        return str;
+    }
 }

@@ -9,6 +9,7 @@ import baseDeDatos.ConexionBaseDeDatosSellado;
 import ModbusTCPJamod.ModbusTCP;
 import PortComJSerial.PortCOM;
 import PortComJSerial.PortCOMSettings;
+import gnu.io.SerialPort;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -48,7 +49,7 @@ public class Sellado extends Application {
         //obtener lector validador
         ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
         //crear hilo lector validador
-        crearThreadLectorValidador(conn, resultSetLectorValidador, waitingTime); 
+        crearThreadLectorValidador(conn, resultSetLectorValidador, waitingTime);
         try {
             conn.getConnection().close();
         } catch (SQLException ex1) {
@@ -56,7 +57,7 @@ public class Sellado extends Application {
         }
         conn.disconnection();
         conn = null;
-        
+
         //obtener lectores en linea de tabla "linea" 
         conn = new ConexionBaseDeDatosSellado();
         ResultSet resultSetLectores = Query.getLectoresJoinLineaJoinCalibrador(conn);
@@ -100,10 +101,11 @@ public class Sellado extends Application {
         primaryStage.show();
         primaryStage.setOnHiding(event -> {
             System.out.println("Closing Stage");
+
             for (PortCOM portCOM : portCOMArray) {
                 if (portCOM != null) {
-                    if (portCOM.thread != null) {
-                        portCOM.thread.stop();
+                    if (portCOM.twoWaySerialComm.commPort != null) {
+                        portCOM.twoWaySerialComm.commPort.close();
                     }
                 }
             }
@@ -131,6 +133,14 @@ public class Sellado extends Application {
                 String dataBits = resultSetLectores.getString("dataBits");
                 String timeout = "2000";
 
+                /*
+
+                System.out.println("sellado rfid baudrate: "+baudRate);
+                System.out.println("sellado rfid dataBits: "+dataBits);
+                System.out.println("sellado rfid stopBits: "+stopBits);
+                System.out.println("sellado rfid parity: "+parity);
+                
+                 */
                 //creación de hilo RFID de códigos
                 portCOM = new PortCOM(
                         calibradorId,
@@ -144,10 +154,13 @@ public class Sellado extends Application {
                         PortCOMSettings.dataBits(dataBits),
                         timeout);
                 portCOMArray.add(portCOM);
+
             }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error Sellado", "Error al obtener RFID SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error al obtener RFID: " + ex.getMessage());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
@@ -165,6 +178,12 @@ public class Sellado extends Application {
                 String dataBits = resultSetLectores.getString("dataBits");
                 String timeout = "2000";
 
+                /*
+                System.out.println("sellado lector baudrate: "+baudRate);
+                System.out.println("sellado lector dataBits: "+dataBits);
+                System.out.println("sellado lector stopBits: "+stopBits);
+                System.out.println("sellado lector parity: "+parity);
+                 */
                 //creación de hilo lector de códigos
                 portCOM = new PortCOM(
                         calibradorId,
@@ -183,6 +202,8 @@ public class Sellado extends Application {
             Query.insertRegistroDev("Error Sellado", "Error al obtener lector SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error al obtener lectores: " + ex.getMessage());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -191,9 +212,9 @@ public class Sellado extends Application {
             while (resultSetLector.next()) {
                 String nombre = resultSetLector.getString("nombre");
                 String ip = resultSetLector.getString("ip");
-                
+
                 //creación de hilo lector validador
-                modbusTCP=new ModbusTCP(nombre, ip, waitingTime);
+                modbusTCP = new ModbusTCP(nombre, ip, waitingTime);
                 modbusTCPArray.add(modbusTCP);
             }
         } catch (SQLException ex) {

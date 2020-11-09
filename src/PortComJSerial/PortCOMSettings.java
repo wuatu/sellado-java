@@ -5,99 +5,76 @@
  */
 package PortComJSerial;
 
-import dk.thibaut.serial.enums.BaudRate;
-import dk.thibaut.serial.enums.DataBits;
-import dk.thibaut.serial.enums.Parity;
-import dk.thibaut.serial.enums.StopBits;
-
 /**
  *
  * @author crist
  */
 public class PortCOMSettings {
-    public static BaudRate baudRate (String baudRateString){
-        BaudRate baudRate=null;        
+    public static int baudRate (String baudRateString){
+        int baudRate=0;        
         if(baudRateString.equalsIgnoreCase("115200")){
-            baudRate=BaudRate.B115200;
+            baudRate=115200;
         } else if(baudRateString.equalsIgnoreCase("19200")){
-            baudRate=BaudRate.B19200;
+            baudRate=19200;
         } else if(baudRateString.equalsIgnoreCase("256000")){
-            baudRate=BaudRate.B256000;
+            baudRate=256000;
         } else if(baudRateString.equalsIgnoreCase("38400")){
-            baudRate=BaudRate.B38400;
+            baudRate=38400;
         } else if(baudRateString.equalsIgnoreCase("57600")){
-            baudRate=BaudRate.B57600;
+            baudRate=57600;
         } else if(baudRateString.equalsIgnoreCase("9600")){
-            baudRate=BaudRate.B9600;
+            baudRate=9600;
         } else{
-            baudRate=BaudRate.UNKNOWN;
+            baudRate=0;
         }
         return baudRate;
     }
     
-    public static Parity parity(String parityString){
-        Parity parity=null;        
+    public static int parity(String parityString){
+        int parity=0;        
         if(parityString.equalsIgnoreCase("EVEN")){
-            parity=Parity.EVEN;
+            parity=2;
         } else if(parityString.equalsIgnoreCase("MARK")){
-            parity=Parity.MARK;
+            parity=3;
         } else if(parityString.equalsIgnoreCase("NONE")){
-            parity=Parity.NONE;
+            parity=0;
         } else if(parityString.equalsIgnoreCase("ODD")){
-            parity=Parity.ODD;
+            parity=1;
         } else if(parityString.equalsIgnoreCase("SPACE")){
-            parity=Parity.SPACE;
+            parity=4;
         } else{
-            parity=Parity.UNKNOWN;
+            parity=0;
         }
         return parity;
     }
     
-    public static StopBits stopBits (String stopBitsString){
-        StopBits stopBits=null;        
+    public static int stopBits (String stopBitsString){
+        int stopBits=0;        
         if(stopBitsString.equalsIgnoreCase("1")){
-            stopBits=StopBits.ONE;
+            stopBits=1;
         } else if(stopBitsString.equalsIgnoreCase("1.5")){
-            stopBits=StopBits.ONE_HALF;
+            stopBits=3;
         } else if(stopBitsString.equalsIgnoreCase("2")){
-            stopBits=StopBits.TWO;
+            stopBits=2;
         } else{
-            stopBits=StopBits.UNKNOWN;
+            stopBits=0;
         }
         return stopBits;
     }
     
-    public static DataBits dataBits (String dataBitsString){
-        DataBits dataBits=null;        
+    public static int dataBits (String dataBitsString){
+        int dataBits=0;        
         if(dataBitsString.equalsIgnoreCase("5")){
-            dataBits=DataBits.D5;
+            dataBits=5;
+        } else if(dataBitsString.equalsIgnoreCase("6")){
+            dataBits=6;
         } else if(dataBitsString.equalsIgnoreCase("7")){
-            dataBits=DataBits.D7;
+            dataBits=7;
         } else if(dataBitsString.equalsIgnoreCase("8")){
-            dataBits=DataBits.D8;
+            dataBits=8;
         } else{
-            dataBits=DataBits.UNKNOWN;
+            dataBits=0;
         }
         return dataBits;
-    }
-    
-    public static String baudRateString (BaudRate baudRate){
-        String baudRateString=null;        
-        if(baudRate.equals(BaudRate.B115200)){
-            baudRateString="115200";
-        } else if(baudRate.equals(BaudRate.B19200)){
-            baudRateString="19200";
-        } else if(baudRate.equals(BaudRate.B256000)){
-            baudRateString="256000";
-        } else if(baudRate.equals(BaudRate.B38400)){
-            baudRateString="38400";
-        } else if(baudRate.equals(BaudRate.B57600)){
-            baudRateString="57600";
-        } else if(baudRate.equals(BaudRate.B9600)){
-            baudRateString="9600";
-        } else{
-            baudRateString="UNKNOWN";
-        }
-        return baudRateString;
-    }
+    }   
 }

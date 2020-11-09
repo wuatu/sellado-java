@@ -120,7 +120,9 @@ public class ModbusTCP {
                                     hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));
                                     //System.out.println(res.getRegisters()[i].getValue());
                                 }
-                                String codigo = HexToASCII.convertHexToASCII(hex);
+                                String codigo = Utils.HexToASCII.convertHexToASCII(hex);
+                                codigo=Utils.HexToASCII.limpiarString(codigo);
+                     
                                 //System.out.println("****** CODIGO LEIDO ******");
                                 System.out.println("Código: " + codigo);
 
