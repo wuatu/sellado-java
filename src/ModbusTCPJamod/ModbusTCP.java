@@ -5,6 +5,7 @@
  */
 package ModbusTCPJamod;
 
+import Utils.Date;
 import Utils.HexToASCII;
 import baseDeDatos.ConexionBaseDeDatosSellado;
 import baseDeDatos.ConexionBaseDeDatosUnitec;
@@ -32,18 +33,32 @@ public class ModbusTCP {
     ModbusTCPTransaction trans = null;
     TCPMasterConnection tcpMasterConnection = null; //the connection
     public Thread thread = null;
+    public String error = null;
 
-    public ModbusTCP(String nombre, String ip, int waitingTime) {
+    public ModbusTCP(String nombre, String ip, int waitingTime, int inicioDireccionDeMemoriaLectura, int calibradorId) {
         try {
+
+            /*
+            int contadorDeLecturasRealizadas=7002;
+            int seLeyoUnCodigo=7003; 0 si no se leyo codigo, 1 en caso contrario
+            int cantidadDeRegistrosALeer=7004;            
+            int codigoRegistroInicial=7005;
+             */
+            int contadorDeLecturasRealizadas = inicioDireccionDeMemoriaLectura; //7002
+            int seLeyoUnCodigo = inicioDireccionDeMemoriaLectura + 1; //7003
+            int totalDeRegistrosALeer = inicioDireccionDeMemoriaLectura + 2; //7004  
+            int codigoRegistroInicial = inicioDireccionDeMemoriaLectura + 3; //7005
+
             InetAddress addr = null;
             int port = Modbus.DEFAULT_PORT;
 
             addr = InetAddress.getByName(ip);
 
-            System.out.println(addr);
+            System.out.println("asdsadasda"+addr);
 
-            //2. Open the connection
+            //2. Open the connection            
             tcpMasterConnection = new TCPMasterConnection(addr);
+            tcpMasterConnection.setTimeout(500);
             tcpMasterConnection.setPort(port);
             tcpMasterConnection.connect();
 
@@ -63,9 +78,7 @@ public class ModbusTCP {
                     int numeroLecturaAnterior = 0;
                     do {
                         // obtiene cantidad de registros a leer 
-                        //ref = 7004
-                        //registroInicial=7004
-                        ReadMultipleRegistersRequest cantidadDeRegistrosALeerRequest = new ReadMultipleRegistersRequest(7004, 1); // obtiene cantidad de registros a leer                    
+                        ReadMultipleRegistersRequest cantidadDeRegistrosALeerRequest = new ReadMultipleRegistersRequest(totalDeRegistrosALeer, 1); // obtiene cantidad de registros a leer 7004
                         trans = new ModbusTCPTransaction(tcpMasterConnection);
                         trans.setRequest(cantidadDeRegistrosALeerRequest);
                         try {
@@ -88,10 +101,10 @@ public class ModbusTCP {
                             cantidadDeRegistrosALeer = cantidadDeRegistrosALeer + 1;
                         }
                         // obtiene numero de lectura de registro a leer ref 7002
-                        numeroLecturaNuevo = obtieneRegistros(7002, 1);
+                        numeroLecturaNuevo = obtieneRegistros(contadorDeLecturasRealizadas, 1);
 
-                        //obtiene registro que confirma si se leyo un codigo
-                        if (obtieneRegistros(7003, 1) == 1) {
+                        //obtiene registro que confirma si se leyo un codigo 7003
+                        if (obtieneRegistros(seLeyoUnCodigo, 1) == 1) {
                             isLeido = true;
                         } else {
                             isLeido = false;
@@ -104,7 +117,7 @@ public class ModbusTCP {
                             //obtiene codigo leido
                             numeroLecturaAnterior = numeroLecturaNuevo;
                             if (secondCodeReader == 1) {
-                                ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(7005, cantidadDeRegistrosALeer);
+                                ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(codigoRegistroInicial, cantidadDeRegistrosALeer); //desde donde comienza el registro del codigo 7005
                                 trans.setRequest(req);
                                 try {
                                     trans.execute();
@@ -121,21 +134,19 @@ public class ModbusTCP {
                                     //System.out.println(res.getRegisters()[i].getValue());
                                 }
                                 String codigo = Utils.HexToASCII.convertHexToASCII(hex);
-                                codigo=Utils.HexToASCII.limpiarString(codigo);
-                     
+                                codigo = Utils.HexToASCII.limpiarString(codigo);
+
                                 //System.out.println("****** CODIGO LEIDO ******");
                                 System.out.println("Código: " + codigo);
+
+                                //inserta codigo en tabla lectorValidadpr_en_calibrador
+                                Query.insertLectorValidadorEnCalibrador(calibradorId, codigo, Date.getDateString(), Date.getHourString());
 
                                 //Verificar a traves de lector verificador, updatear valores is_verificado, is_before_time tabla registro_diario_caja_sellada
                                 Query.updateRegistroDiarioCajaCerradaCodigo(codigo, waitingTime);
 
                             }
 
-                        }
-                        try {
-                            Thread.sleep(500);
-                        } catch (InterruptedException ex) {
-                            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador InterruptedException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                         secondCodeReader = 1;
                     } while (true);
@@ -144,8 +155,9 @@ public class ModbusTCP {
 
             thread = new Thread(runable);
             thread.start();
-
         } catch (Exception ex) {
+            this.error= "Error conexion sensor validador ip: " +ip+", " + ex.getMessage();
+            System.out.println("Error ModbusTCP" + "Error conexion sensor validador Exception: " + ex.getMessage());
             Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador Exception: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
         }
     }

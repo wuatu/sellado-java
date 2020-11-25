@@ -11,21 +11,30 @@ package sellado.models;
  */
 public class CajaUnitec {
     int id;
-    String envase;
-    String variedad;
-    String categoria;
-    String calibre;
-    String correlativo;
-    String ponderacion;
+    String Cod_Caja;
+    String Codigo_Confection; 
+    String Confection; 
+    String Codigo_Embalaje; 
+    String Embalaje; 
+    String Codigo_Envase; 
+    String Envase; 
+    String Categoria; 
+    String Categoria_Timbrada; 
+    String Codigo_Calibre;
+    String Calibre;
 
-    public CajaUnitec(int id, String envase, String variedad, String categoria, String calibre, String correlativo, String ponderacion) {
-        this.id = id;
-        this.envase = envase;
-        this.variedad = variedad;
-        this.categoria = categoria;
-        this.calibre = calibre;
-        this.correlativo = correlativo;
-        this.ponderacion = ponderacion;
+    public CajaUnitec(String Cod_Caja, String Codigo_Confection, String Confection, String Codigo_Embalaje, String Embalaje, String Codigo_Envase, String Envase, String Categoria, String Categoria_Timbrada, String Codigo_Calibre, String Calibre) {
+        this.Cod_Caja = Cod_Caja;
+        this.Codigo_Confection = Codigo_Confection;
+        this.Confection = Confection;
+        this.Codigo_Embalaje = Codigo_Embalaje;
+        this.Embalaje = Embalaje;
+        this.Codigo_Envase = Codigo_Envase;
+        this.Envase = Envase;
+        this.Categoria = Categoria;
+        this.Categoria_Timbrada = Categoria_Timbrada;
+        this.Codigo_Calibre = Codigo_Calibre;
+        this.Calibre = Calibre;
     }
 
     public int getId() {
@@ -36,52 +45,96 @@ public class CajaUnitec {
         this.id = id;
     }
 
+    public String getCod_Caja() {
+        return Cod_Caja;
+    }
+
+    public void setCod_Caja(String Cod_Caja) {
+        this.Cod_Caja = Cod_Caja;
+    }
+
+    public String getCodigo_Confection() {
+        return Codigo_Confection;
+    }
+
+    public void setCodigo_Confection(String Codigo_Confection) {
+        this.Codigo_Confection = Codigo_Confection;
+    }
+
+    public String getConfection() {
+        return Confection;
+    }
+
+    public void setConfection(String Confection) {
+        this.Confection = Confection;
+    }
+
+    public String getCodigo_Embalaje() {
+        return Codigo_Embalaje;
+    }
+
+    public void setCodigo_Embalaje(String Codigo_Embalaje) {
+        this.Codigo_Embalaje = Codigo_Embalaje;
+    }
+
+    public String getEmbalaje() {
+        return Embalaje;
+    }
+
+    public void setEmbalaje(String Embalaje) {
+        this.Embalaje = Embalaje;
+    }
+
+    public String getCodigo_Envase() {
+        return Codigo_Envase;
+    }
+
+    public void setCodigo_Envase(String Codigo_Envase) {
+        this.Codigo_Envase = Codigo_Envase;
+    }
+
     public String getEnvase() {
-        return envase;
+        return Envase;
     }
 
-    public void setEnvase(String envase) {
-        this.envase = envase;
-    }
-
-    public String getVariedad() {
-        return variedad;
-    }
-
-    public void setVariedad(String variedad) {
-        this.variedad = variedad;
+    public void setEnvase(String Envase) {
+        this.Envase = Envase;
     }
 
     public String getCategoria() {
-        return categoria;
+        return Categoria;
     }
 
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
+    public void setCategoria(String Categoria) {
+        this.Categoria = Categoria;
+    }
+
+    public String getCategoria_Timbrada() {
+        return Categoria_Timbrada;
+    }
+
+    public void setCategoria_Timbrada(String Categoria_Timbrada) {
+        this.Categoria_Timbrada = Categoria_Timbrada;
+    }
+
+    public String getCodigo_Calibre() {
+        return Codigo_Calibre;
+    }
+
+    public void setCodigo_Calibre(String Codigo_Calibre) {
+        this.Codigo_Calibre = Codigo_Calibre;
     }
 
     public String getCalibre() {
-        return calibre;
+        return Calibre;
     }
 
-    public void setCalibre(String calibre) {
-        this.calibre = calibre;
+    public void setCalibre(String Calibre) {
+        this.Calibre = Calibre;
     }
+    
+    
 
-    public String getCorrelativo() {
-        return correlativo;
-    }
-
-    public void setCorrelativo(String correlativo) {
-        this.correlativo = correlativo;
-    }
-
-    public String getPonderacion() {
-        return ponderacion;
-    }
-
-    public void setPonderacion(String ponderacion) {
-        this.ponderacion = ponderacion;
-    }        
+   
     
 }

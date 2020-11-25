@@ -24,6 +24,18 @@ import sellado.models.CajaUnitec;
  */
 public class Query {
 
+    public static ResultSet getRfidSalidaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
+        try {
+            Statement statement = conn.getConnection().createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from rfid_salida inner join calibrador on fk_calibrador = calibrador.id");
+            return resultSet;
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener RFIDJoinLineaJoinCalibrador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
     public static ResultSet getRFIDJoinLineaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
         try {
             Statement statement = conn.getConnection().createStatement();
@@ -181,6 +193,41 @@ public class Query {
             }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectorByPort SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public static ResultSet getRfidByPort(ConexionBaseDeDatosSellado conn, String port) {
+        try {
+            String query = "select * from rfid inner join linea on rfid.fk_linea=linea.id inner join calibrador on linea.fk_calibrador=calibrador.id where ip = ? limit 1";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            preparedStmt.setString(1, port);
+            ResultSet resultSet = preparedStmt.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se obtuvo RFID por puerto: " + port, "No se obtuvo RFID por puerto: " + port)) {
+                return resultSet;
+            }
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRFIDByPort SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public static ResultSet getRfidSalidaByPort(ConexionBaseDeDatosSellado conn, String port) {
+        try {
+            //si no retorna quiere decir que el puerto proviene de otra tabla rfid
+            String query = "select * from rfid_salida where ip=? limit 1";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            preparedStmt.setString(1, port);
+            ResultSet resultSet = preparedStmt.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se obtuvo RFID salida por puerto: " + port, "No se obtuvo RFID salida por puerto: " + port)) {
+                return resultSet;
+            }
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRFIDByPort SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -380,9 +427,10 @@ public class Query {
         return null;
     }
 
-    public static CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosSellado conn, String codigo) {
+    //cambiar ConexionBaseDeDatosSellado por ConexionBaseDeDatosUnitec
+    public static CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
         try {
-            String query = "select * from caja_unitec where codigo like '%" + codigo + "%' limit 1";
+            String query = "select * from Danich_DatosCajas where Cod_Caja = '20000002'";
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             ResultSet resultSet = preparedStatement.executeQuery();
@@ -390,14 +438,18 @@ public class Query {
                 resultSet.beforeFirst();
                 CajaUnitec caja = null;
                 while (resultSet.next()) {
-                    int id = resultSet.getInt("id");
-                    String envase = resultSet.getString("envase");
-                    String variedad = resultSet.getString("variedad");
-                    String categoria = resultSet.getString("categoria");
-                    String calibre = resultSet.getString("calibre");
-                    String correlativo = resultSet.getString("correlativo");
-                    String ponderacion = resultSet.getString("ponderacion");
-                    caja = new CajaUnitec(id, envase, variedad, categoria, calibre, correlativo, ponderacion);
+                    String Cod_Caja = resultSet.getString("Cod_Caja");
+                    String Codigo_Confection = resultSet.getString("Codigo_Confection");
+                    String Confection = resultSet.getString("Confection");
+                    String Codigo_Embalaje = resultSet.getString("Codigo_Embalaje");
+                    String Embalaje = resultSet.getString("Embalaje");
+                    String Codigo_Envase = resultSet.getString("Codigo_Envase");
+                    String Envase = resultSet.getString("Envase");
+                    String Categoria = resultSet.getString("Categoria");
+                    String Categoria_Timbrada = resultSet.getString("Categoria_Timbrada");
+                    String Codigo_Calibre = resultSet.getString("Codigo_Calibre");
+                    String Calibre = resultSet.getString("Calibre");
+                    caja = new CajaUnitec(Cod_Caja, Codigo_Confection, Confection, Codigo_Embalaje, Embalaje, Codigo_Envase, Envase, Categoria, Categoria_Timbrada, Codigo_Calibre, Calibre);
                 }
                 if (caja != null) {
                     Query.insertRegistroProduccion("ok", "Se encuentra envase: " + caja.getEnvase() + " por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
@@ -489,6 +541,46 @@ public class Query {
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
         }
         conn.disconnection();
+    }
+
+    public static void insertLectorValidadorEnCalibrador(int calibradorId, String codigo, String fecha, String hora) {
+        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+        try {
+            Statement statement = conn.getConnection().createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from lectorValidador_en_calibrador where fk_calibrador='" + calibradorId + "'");
+            if (isEmptyResultSet(resultSet, "Se obtuvo lector validador de calibrador por id: " + calibradorId, "No se pudo obtener lector validador de calibrador por id: " + calibradorId)) {
+                String query = " insert into lectorValidador_en_calibrador (codigo,fecha, hora,fk_calibrador)"
+                        + " values (?, ?, ?, ?, ?)";
+                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                preparedStmt.setString(1, codigo);
+                preparedStmt.setString(2, fecha);
+                preparedStmt.setString(3, hora);
+                preparedStmt.setInt(4, calibradorId);
+                preparedStmt.execute();
+            } else {
+                String query = "update lectorValidador_en_calibrador set codigo = ?, fecha = ?, hora=? where fk_calibrador = ?";
+                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                System.out.println(codigo);
+                System.out.println(fecha);
+                System.out.println(hora);
+                System.out.println(calibradorId);
+                preparedStmt.setString(1, codigo);
+                preparedStmt.setString(2, fecha);
+                preparedStmt.setString(3, hora);
+                preparedStmt.setInt(4, calibradorId);
+                preparedStmt.executeUpdate();
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        try {
+            conn.getConnection().close();
+        } catch (SQLException ex) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        conn.disconnection();
+        conn = null;
     }
 
     public static int getWaitingTime() {
@@ -590,6 +682,111 @@ public class Query {
         }
         conn.disconnection();
         conn = null;
+    }
+
+    public static void insertLectorEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetGetLectorByPort, String codigo, String fecha, String hora) {
+        try {
+            resultSetGetLectorByPort.beforeFirst();
+            while (resultSetGetLectorByPort.next()) {
+                String lineaId = resultSetGetLectorByPort.getString("linea.id");
+                String lectorId = resultSetGetLectorByPort.getString("lector.id");
+                Statement statement = conn.getConnection().createStatement();
+                ResultSet resultSet = statement.executeQuery("select * from lector_en_linea where fk_lector='" + lectorId + "'");
+                if (isEmptyResultSet(resultSet, "Se obtuvo lector de linea por id linea: " + lineaId, "No se pudo obtener lector de linea por id linea: " + lineaId)) {
+                    String query = " insert into lector_en_linea (codigo,fecha, hora,fk_linea,fk_lector)"
+                            + " values (?, ?, ?, ?, ?)";
+                    PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                    preparedStmt.setString(1, codigo);
+                    preparedStmt.setString(2, fecha);
+                    preparedStmt.setString(3, hora);
+                    preparedStmt.setString(4, lineaId);
+                    preparedStmt.setString(5, lectorId);
+                    preparedStmt.execute();
+                } else {
+                    String query = "update lector_en_linea set codigo = ?, fecha = ?, hora=? where fk_linea = ? and fk_lector=?";
+                    PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                    preparedStmt.setString(1, codigo);
+                    preparedStmt.setString(2, fecha);
+                    preparedStmt.setString(3, hora);
+                    preparedStmt.setString(4, lineaId);
+                    preparedStmt.setString(5, lectorId);
+                    preparedStmt.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static void insertRfidEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetGetRfidByPort, String codigo, String fecha, String hora) {
+        try {
+            resultSetGetRfidByPort.beforeFirst();
+            while (resultSetGetRfidByPort.next()) {
+                String lineaId = resultSetGetRfidByPort.getString("linea.id");
+                String rfidId = resultSetGetRfidByPort.getString("rfid.id");
+                Statement statement = conn.getConnection().createStatement();
+                ResultSet resultSet = statement.executeQuery("select * from rfid_en_linea where fk_rfid='" + rfidId + "'");
+                if (isEmptyResultSet(resultSet, "Se obtuvo RFID de linea por id linea: " + lineaId, "No se pudo obtener lector de linea por id linea: " + lineaId)) {
+                    String query = " insert into rfid_en_linea (codigo,fecha, hora,fk_linea,fk_rfid)"
+                            + " values (?, ?, ?, ?, ?)";
+                    PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                    preparedStmt.setString(1, codigo);
+                    preparedStmt.setString(2, fecha);
+                    preparedStmt.setString(3, hora);
+                    preparedStmt.setString(4, lineaId);
+                    preparedStmt.setString(5, rfidId);
+                    preparedStmt.execute();
+                } else {
+                    String query = "update rfid_en_linea set codigo = ?, fecha = ?, hora=? where fk_linea = ? and fk_rfid=?";
+                    PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                    System.out.println(codigo);
+                    System.out.println(fecha);
+                    System.out.println(hora);
+                    System.out.println(lineaId);
+                    System.out.println(rfidId);
+                    preparedStmt.setString(1, codigo);
+                    preparedStmt.setString(2, fecha);
+                    preparedStmt.setString(3, hora);
+                    preparedStmt.setString(4, lineaId);
+                    preparedStmt.setString(5, rfidId);
+                    preparedStmt.executeUpdate();
+                }
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static void insertRfidSalidaEnCalibrador(ConexionBaseDeDatosSellado conn, String calibradorId, String codigo, String fecha, String hora) {
+        try {
+            Statement statement = conn.getConnection().createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from rfid_en_linea where fk_calibrador='" + calibradorId + "'");
+            if (isEmptyResultSet(resultSet, "Se obtuvo RFID de linea por id linea: " + calibradorId, "No se pudo obtener lector de linea por id linea: " + calibradorId)) {
+                String query = " insert into rfid_en_linea (codigo,fecha, hora,fk_calibrador)"
+                        + " values (?, ?, ?, ?, ?)";
+                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                preparedStmt.setString(1, codigo);
+                preparedStmt.setString(2, fecha);
+                preparedStmt.setString(3, hora);
+                preparedStmt.setString(4, calibradorId);
+                preparedStmt.execute();
+            } else {
+                String query = "update rfid_en_linea set codigo = ?, fecha = ?, hora=? where fk_calibrador = ?";
+                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                System.out.println(codigo);
+                System.out.println(fecha);
+                System.out.println(hora);
+                System.out.println(calibradorId);
+                preparedStmt.setString(1, codigo);
+                preparedStmt.setString(2, fecha);
+                preparedStmt.setString(3, hora);
+                preparedStmt.setString(4, calibradorId);
+                preparedStmt.executeUpdate();
+            }
+
+        } catch (SQLException ex) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
 }

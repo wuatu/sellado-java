@@ -53,17 +53,16 @@ public class PortCOM {
 
     public TwoWaySerialComm twoWaySerialComm;
 
+    //portCom RFID y lector
     public PortCOM(String calibrador, String linea, String tag, String nombre, String port, int baudRate, int parity, int stopBits, int dataBits, String timeout) throws Exception {
-
-// Get a new instance of SerialPort by opening a port.
-/*
-        System.out.println("twoWaySerialComm lector baudrate: " + baudRate);
-        System.out.println("twoWaySerialComm lector dataBits: " + dataBits);
-        System.out.println("twoWaySerialComm lector stopBits: " + stopBits);
-        System.out.println("twoWaySerialComm lector parity: " + parity);
-*/
-
         twoWaySerialComm = new TwoWaySerialComm();
         twoWaySerialComm.connect(calibrador, linea, tag, nombre, port, baudRate, parity, stopBits, dataBits, timeout);
     }
+    
+    //portCom RFID salida
+    public PortCOM(String calibrador, String tag, String nombre, String port, int baudRate, int parity, int stopBits, int dataBits, String timeout) throws Exception {
+        twoWaySerialComm = new TwoWaySerialComm();
+        twoWaySerialComm.connect(calibrador, tag, nombre, port, baudRate, parity, stopBits, dataBits, timeout);
+    }
+    
 }
