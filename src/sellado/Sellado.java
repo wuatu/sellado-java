@@ -41,6 +41,7 @@ public class Sellado extends Application {
     private static String TagLector = "LECTOR";
     private static String TagRFID = "RFID";
     private static String TagRFIDSalida = "RFID_SALIDA";
+    private static String TagRFIDRegistroColaborador = "RFID_REGISTRO_COLABORADOR";
     private TextArea textArea = new TextArea();
 
     @Override
@@ -156,6 +157,19 @@ public class Sellado extends Application {
             }
             conn.disconnection();
             conn = null;
+            
+            //obtener RFID de tabla "rfid_registro_colaborador"
+            conn = new ConexionBaseDeDatosSellado();
+            ResultSet resultSetRfidRegistroColaborador = Query.getRfidRegistroColaborador(conn);
+            //crear hilo por cada rfid
+            crearThreadRfidRegistroColaborador(resultSetRfidRegistroColaborador);
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
 
             System.out.println("Configuracion inicial realizada satisfactoriamente");
 
@@ -176,14 +190,6 @@ public class Sellado extends Application {
                 String dataBits = resultSetLectores.getString("dataBits");
                 String timeout = "2000";
 
-                /*
-
-                System.out.println("sellado rfid baudrate: "+baudRate);
-                System.out.println("sellado rfid dataBits: "+dataBits);
-                System.out.println("sellado rfid stopBits: "+stopBits);
-                System.out.println("sellado rfid parity: "+parity);
-                
-                 */
                 //creación de hilo RFID de códigos
                 portCOM = new PortCOM(
                         calibradorId,
@@ -225,12 +231,6 @@ public class Sellado extends Application {
                 String dataBits = resultSetLectores.getString("dataBits");
                 String timeout = "2000";
 
-                /*
-                System.out.println("sellado lector baudrate: "+baudRate);
-                System.out.println("sellado lector dataBits: "+dataBits);
-                System.out.println("sellado lector stopBits: "+stopBits);
-                System.out.println("sellado lector parity: "+parity);
-                 */
                 //creación de hilo lector de códigos
                 portCOM = new PortCOM(
                         calibradorId,
@@ -273,6 +273,42 @@ public class Sellado extends Application {
                 portCOM = new PortCOM(
                         calibradorId,
                         TagRFIDSalida,
+                        nombre,
+                        port,
+                        PortCOMSettings.baudRate(baudRate),
+                        PortCOMSettings.parity(parity),
+                        PortCOMSettings.stopBits(stopBits),
+                        PortCOMSettings.dataBits(dataBits),
+                        timeout);
+                portCOMArray.add(portCOM);
+                if (portCOM.twoWaySerialComm.connUnitec.error != null) {
+                    this.textArea.setText(this.textArea.getText() + "\n" + portCOM.twoWaySerialComm.connUnitec.error + " RFID Salida, puerto: " + port);
+                }
+                llenarLog();
+
+            }
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error Sellado", "Error al obtener RFID SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            System.out.println("Error al obtener RFID: " + ex.getMessage());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (Exception ex) {
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+    
+    private void crearThreadRfidRegistroColaborador(ResultSet resultSetRfidRegistroColaborador) {
+        try {
+            while (resultSetRfidRegistroColaborador.next()) {
+                String nombre = resultSetRfidRegistroColaborador.getString("nombre");
+                String port = resultSetRfidRegistroColaborador.getString("ip");
+                String baudRate = resultSetRfidRegistroColaborador.getString("baudRate");
+                String parity = resultSetRfidRegistroColaborador.getString("parity");
+                String stopBits = resultSetRfidRegistroColaborador.getString("stopBits");
+                String dataBits = resultSetRfidRegistroColaborador.getString("dataBits");
+                String timeout = "2000";
+
+                portCOM = new PortCOM(
+                        TagRFIDRegistroColaborador,
                         nombre,
                         port,
                         PortCOMSettings.baudRate(baudRate),

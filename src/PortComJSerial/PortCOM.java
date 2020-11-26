@@ -65,4 +65,10 @@ public class PortCOM {
         twoWaySerialComm.connect(calibrador, tag, nombre, port, baudRate, parity, stopBits, dataBits, timeout);
     }
     
+    //portCom RFID registro colaborador
+    public PortCOM(String tag, String nombre, String port, int baudRate, int parity, int stopBits, int dataBits, String timeout) throws Exception {
+        twoWaySerialComm = new TwoWaySerialComm();
+        twoWaySerialComm.connect(tag, nombre, port, baudRate, parity, stopBits, dataBits, timeout);
+    }
+    
 }

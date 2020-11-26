@@ -36,7 +36,7 @@ public class ConexionBaseDeDatosUnitec {
 
     public ConexionBaseDeDatosUnitec() {
         int i = 0;
-        while (i < 5) {
+        while (i < 1) {
             try {
                 //obtiene la conexion
                 conn = DriverManager.getConnection(conexionUrl);

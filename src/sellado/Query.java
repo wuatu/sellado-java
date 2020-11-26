@@ -36,6 +36,18 @@ public class Query {
         return null;
     }
 
+    public static ResultSet getRfidRegistroColaborador(ConexionBaseDeDatosSellado conn) {
+        try {
+            Statement statement = conn.getConnection().createStatement();
+            ResultSet resultSet = statement.executeQuery("select * from rfid_registro_colaborador");
+            return resultSet;
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRfidRegistroColaborador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
     public static ResultSet getRFIDJoinLineaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
         try {
             Statement statement = conn.getConnection().createStatement();
@@ -378,7 +390,7 @@ public class Query {
                 Query.insertRegistroProduccion("ok", "Se encuentra colaborador por RFID: " + codigoRFID, Utils.Date.getDateString(), Utils.Date.getHourString());
                 return resultSet;
             }
-            Query.insertRegistroProduccion("err", "No se encuentra colaborador por RFID: " + codigoRFID, Utils.Date.getDateString(), Utils.Date.getHourString());
+            Query.insertRegistroProduccion("obs", "No se encuentra colaborador por RFID: " + codigoRFID, Utils.Date.getDateString(), Utils.Date.getHourString());
 
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getUsuarioPorRFID SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
@@ -427,39 +439,44 @@ public class Query {
         return null;
     }
 
-    //cambiar ConexionBaseDeDatosSellado por ConexionBaseDeDatosUnitec
     public static CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
         try {
-            String query = "select * from Danich_DatosCajas where Cod_Caja = '20000002'";
-            PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
-                    ResultSet.CONCUR_UPDATABLE);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (!isEmptyResultSet(resultSet, "Se encotró caja por codigo:" + codigo, "No se encotró caja por codigo:" + codigo)) {
-                resultSet.beforeFirst();
-                CajaUnitec caja = null;
-                while (resultSet.next()) {
-                    String Cod_Caja = resultSet.getString("Cod_Caja");
-                    String Codigo_Confection = resultSet.getString("Codigo_Confection");
-                    String Confection = resultSet.getString("Confection");
-                    String Codigo_Embalaje = resultSet.getString("Codigo_Embalaje");
-                    String Embalaje = resultSet.getString("Embalaje");
-                    String Codigo_Envase = resultSet.getString("Codigo_Envase");
-                    String Envase = resultSet.getString("Envase");
-                    String Categoria = resultSet.getString("Categoria");
-                    String Categoria_Timbrada = resultSet.getString("Categoria_Timbrada");
-                    String Codigo_Calibre = resultSet.getString("Codigo_Calibre");
-                    String Calibre = resultSet.getString("Calibre");
-                    caja = new CajaUnitec(Cod_Caja, Codigo_Confection, Confection, Codigo_Embalaje, Embalaje, Codigo_Envase, Envase, Categoria, Categoria_Timbrada, Codigo_Calibre, Calibre);
+            if (conn.getConnection() != null) {
+                String query = "select * from Danich_DatosCajas where Cod_Caja =" + codigo + "";
+                PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                        ResultSet.CONCUR_UPDATABLE);
+                ResultSet resultSet = preparedStatement.executeQuery();
+                if (!isEmptyResultSet(resultSet, "Se encotró caja por codigo:" + codigo, "No se encotró caja por codigo:" + codigo)) {
+                    resultSet.beforeFirst();
+                    CajaUnitec caja = null;
+                    while (resultSet.next()) {
+                        String Cod_Caja = resultSet.getString("Cod_Caja");
+                        String Codigo_Confection = resultSet.getString("Codigo_Confection");
+                        String Confection = resultSet.getString("Confection");
+                        String Codigo_Embalaje = resultSet.getString("Codigo_Embalaje");
+                        String Embalaje = resultSet.getString("Embalaje");
+                        String Codigo_Envase = resultSet.getString("Codigo_Envase");
+                        String Envase = resultSet.getString("Envase");
+                        String Categoria = resultSet.getString("Categoria");
+                        String Categoria_Timbrada = resultSet.getString("Categoria_Timbrada");
+                        String Codigo_Calibre = resultSet.getString("Codigo_Calibre");
+                        String Calibre = resultSet.getString("Calibre");
+                        caja = new CajaUnitec(Cod_Caja, Codigo_Confection, Confection, Codigo_Embalaje, Embalaje, Codigo_Envase, Envase, Categoria, Categoria_Timbrada, Codigo_Calibre, Calibre);
+                    }
+                    if (caja != null) {
+                        Query.insertRegistroProduccion("ok", "Se encuentra envase: " + caja.getEnvase() + " por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
+                        return caja;
+                    }
+                    Query.insertRegistroProduccion("err", "No se pudo encontrar caja en base de datos UNITEC por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
                 }
-                if (caja != null) {
-                    Query.insertRegistroProduccion("ok", "Se encuentra envase: " + caja.getEnvase() + " por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
-                    return caja;
-                }
-                Query.insertRegistroProduccion("err", "No se pudo encontrar caja en base de datos UNITEC por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
+            } else {
+                Query.insertRegistroProduccion("err", "Error conexion a base de datos unic no establecida: ", Utils.Date.getDateString(), Utils.Date.getHourString());
+                Query.insertRegistroDev("err", "Error conexion a base de datos unic no establecida: ", Utils.Date.getDateString(), Utils.Date.getHourString());
+                return null;
             }
         } catch (SQLException ex) {
-            Query.insertRegistroProduccion("Error PortCom Query Unitec", "Error al obtener getCajaPorCodigoUnitec SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
-            Query.insertRegistroDev("Error PortCom Query Unitec", "Error al obtener getCajaPorCodigoUnitec SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Query.insertRegistroProduccion("err", "Error al obtener getCajaPorCodigoUnitec SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Query.insertRegistroDev("err", "Error al obtener getCajaPorCodigoUnitec SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
@@ -640,39 +657,18 @@ public class Query {
     public static void insertRegistroProduccion(String nombre, String registro, String fecha, String hora) {
         ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
         try {
-            String query = " insert into registro_produccion (nombre_colaborador,registro,fecha, hora)"
-                    + " values (?, ?, ?, ?)";
-            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
-            preparedStmt.setString(1, nombre);
-            preparedStmt.setString(2, registro);
-            preparedStmt.setString(3, fecha);
-            preparedStmt.setString(4, hora);
-            preparedStmt.execute();
-        } catch (SQLException ex) {
-            Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex1) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-        }
-        conn.disconnection();
-        conn = null;
-    }
-
-    public static void insertRegistroProduccion(int idColaborador, String nombre, String apellido, String registro, String fecha, String hora) {
-        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
-        try {
-            String query = " insert into registro_dev (id_colaborador, rut_colaborador, nombre_colaborador, apellido_colaborador, registro, fecha, hora)"
+            System.out.println("hora:" + hora);
+            String query = " insert into registro_produccion (id_colaborador, nombre_colaborador, apellido_colaborador, registro, fecha, hora)"
                     + " values (?, ?, ?, ?, ?, ?)";
             PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
-            preparedStmt.setString(1, nombre);
-            preparedStmt.setString(2, registro);
-            preparedStmt.setString(3, fecha);
-            preparedStmt.setString(4, hora);
+            preparedStmt.setInt(1, 0);
+            preparedStmt.setString(2, nombre);
+            preparedStmt.setString(3, "apellido");
+            preparedStmt.setString(4, registro);
+            preparedStmt.setString(5, fecha);
+            preparedStmt.setString(6, hora);
             preparedStmt.execute();
         } catch (SQLException ex) {
-            Query.insertRegistroDev("Error PortCom Query", "Error al insert insertRegistroProduccion SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {
@@ -763,7 +759,7 @@ public class Query {
             ResultSet resultSet = statement.executeQuery("select * from rfid_en_linea where fk_calibrador='" + calibradorId + "'");
             if (isEmptyResultSet(resultSet, "Se obtuvo RFID de linea por id linea: " + calibradorId, "No se pudo obtener lector de linea por id linea: " + calibradorId)) {
                 String query = " insert into rfid_en_linea (codigo,fecha, hora,fk_calibrador)"
-                        + " values (?, ?, ?, ?, ?)";
+                        + " values (?, ?, ?, ?)";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, codigo);
                 preparedStmt.setString(2, fecha);
@@ -785,6 +781,21 @@ public class Query {
             }
 
         } catch (SQLException ex) {
+            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    public static void insertRegistroRfid(ConexionBaseDeDatosSellado conn, String codigo, String fecha, String hora) {
+        try {
+
+            String query = " insert into registro_rfid (codigo)"
+                    + " values (?)";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+            preparedStmt.setString(1, codigo);
+            preparedStmt.execute();
+            Query.insertRegistroProduccion("ok", "Código RFID registro de colaborador: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
+        } catch (SQLException ex) {
+            Query.insertRegistroProduccion("err", "No se pudo obtener registro RFID registro de colaborador", Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
         }
     }

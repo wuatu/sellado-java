@@ -111,6 +111,44 @@ public class TwoWaySerialComm {
 
     }
 
+    //contructor rfid registro colaborador
+    public void connect(String tag, String nombre, String port, int baudRate, int parity, int stopBits, int dataBits, String timeout) throws Exception {
+
+        listPorts();
+        System.out.println("port: " + port);
+        boolean existPort = false;
+        for (String nombrePuertoString : nombresPuertosString) {
+            if (nombrePuertoString.equalsIgnoreCase(port)) {
+                existPort = true;
+                break;
+            }
+        }
+        if (existPort == false) {
+            erroresString.add("Error al conectar al puerto: " + port + ", NO existe conexión:" + tag);
+            return;
+        }
+
+        CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
+
+        if (portIdentifier.isCurrentlyOwned()) {
+            System.out.println("Error: Port is currently in use");
+        } else {
+            commPort = portIdentifier.open(this.getClass().getName(), 500);
+
+            if (commPort instanceof SerialPort) {
+                SerialPort serialPort = (SerialPort) commPort;
+                serialPort.setSerialPortParams(baudRate, dataBits, stopBits, parity);
+                InputStream in = serialPort.getInputStream();
+                serialPort.addEventListener(new SerialReader(in, tag, port));
+                serialPort.notifyOnDataAvailable(true);
+
+            } else {
+                System.out.println("Error: Only serial ports are handled by this example.");
+            }
+        }
+
+    }
+
     void listPorts() {
         java.util.Enumeration<CommPortIdentifier> portEnum = CommPortIdentifier.getPortIdentifiers();
         while (portEnum.hasMoreElements()) {
@@ -138,6 +176,20 @@ public class TwoWaySerialComm {
     }
 
     void connect(String calibrador, String tag, String nombre, String port, int baudRate, int parity, int stopBits, int dataBits, String timeout) throws Exception {
+        listPorts();
+        System.out.println("port: " + port);
+        boolean existPort = false;
+        for (String nombrePuertoString : nombresPuertosString) {
+            if (nombrePuertoString.equalsIgnoreCase(port)) {
+                existPort = true;
+                break;
+            }
+        }
+        if (existPort == false) {
+            erroresString.add("Error al conectar al puerto: " + port + ", NO existe conexión:" + tag);
+            return;
+        }
+
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
         if (portIdentifier.isCurrentlyOwned()) {
             System.out.println("Error: Port is currently in use");
@@ -184,7 +236,13 @@ public class TwoWaySerialComm {
             this.tag = tag;
             this.port = port;
             this.calibradorId = calibradorId;
-            this.lineaId = lineaId;
+        }
+
+        //constructor rfid registro colaborador
+        public SerialReader(InputStream in, String tag, String port) {
+            this.in = in;
+            this.tag = tag;
+            this.port = port;
         }
 
         public void serialEvent(SerialPortEvent arg0) {
@@ -235,6 +293,7 @@ public class TwoWaySerialComm {
             }
 
             //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
+            System.out.println("conn unitecccccccc" + connUnitec);
             CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(connUnitec, codigo);
 
             if (cajaUnitec != null) {
@@ -252,19 +311,19 @@ public class TwoWaySerialComm {
                             Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, codigo);
                         } else {
                             System.out.println("resultSetAperturaCierreDeTurno es nulo");
-                            Query.insertRegistroProduccion("err", "Apertura cierre de turno es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
+                            Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                     } else {
-                        System.out.println("resultSetUsuariosEnLinea es nulo");
-                        Query.insertRegistroProduccion("err", "Usuarios en linea es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
+                        System.out.println("No se pudo obtener usuarios en línea");
+                        Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
                     }
                 } else {
-                    System.out.println("resultSetGetLectorByPort es nulo");
-                    Query.insertRegistroProduccion("err", "Lector Port es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
+                    System.out.println("No se pudo obtener lector por puerto");
+                    Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
                 }
             } else {
                 System.out.println("cajaUnitec es nulo");
-                Query.insertRegistroProduccion("err", "Caja UNITEC es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
+                Query.insertRegistroProduccion("err", "No se pudo obtener caja desde UNITEC", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
             /*
                                 conn.getConnection().close();
@@ -308,7 +367,7 @@ public class TwoWaySerialComm {
                 }
             } else {
                 System.out.println("resultSetUsuario es nulo");
-                Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
+                //Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
         } else if (tag == "RFID_SALIDA") {
             //inserta codigo rfid en tabla rfidSalida_en_calibrador
@@ -340,6 +399,9 @@ public class TwoWaySerialComm {
                 Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
 
+        } else if (tag == "RFID_REGISTRO_COLABORADOR") {
+            //inserta codigo rfid en tabla rfidSalida_en_calibrador
+            Query.insertRegistroRfid(conn, codigo, Date.getDateString(), Date.getHourString());
         }
     }
 
@@ -397,7 +459,10 @@ public class TwoWaySerialComm {
     }
      */
     private CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec connUnitec, String codigo) {
+        System.out.println("cajaaaaaaaaaaaaaaaaaaaa entreeeeeeeeeeeeeeeeeeeeeeee");
         CajaUnitec caja = Query.getCajaPorCodigoUnitec(connUnitec, codigo);
+
+        System.out.println("cajaaaaaaaaaaaaaaaaaaaa" + caja);
         return caja;
     }
 }
