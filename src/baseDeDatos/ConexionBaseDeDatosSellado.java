@@ -27,7 +27,7 @@ public class ConexionBaseDeDatosSellado {
     public String error = null;
 
     public ConexionBaseDeDatosSellado() {
-        int i = 0;
+        int i = 1;
         //reintentos de conexion
         while (i < 5) {
             try {

@@ -35,7 +35,7 @@ public class ConexionBaseDeDatosUnitec {
     public String error;
 
     public ConexionBaseDeDatosUnitec() {
-        int i = 0;
+        int i = 1;
         while (i < 1) {
             try {
                 //obtiene la conexion
