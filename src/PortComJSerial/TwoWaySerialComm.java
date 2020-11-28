@@ -308,7 +308,7 @@ public class TwoWaySerialComm {
                         ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
                         if (resultSetAperturaCierreDeTurno != null) {
                             //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
-                            Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, codigo);
+                            Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, cajaUnitec, codigo);
                         } else {
                             System.out.println("resultSetAperturaCierreDeTurno es nulo");
                             Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
@@ -324,6 +324,30 @@ public class TwoWaySerialComm {
             } else {
                 System.out.println("cajaUnitec es nulo");
                 Query.insertRegistroProduccion("err", "No se pudo obtener caja desde UNITEC", Utils.Date.getDateString(), Utils.Date.getHourString());
+                if (resultSetGetLectorByPort != null) {
+                    //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
+                    ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
+                    if (resultSetUsuariosEnLinea != null) {
+                        //busca caja en base de datos sellado para obtener ponderación de caja
+                        //CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
+
+                        //obtener id de apertura_cierre_de_turno
+                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
+                        if (resultSetAperturaCierreDeTurno != null) {
+                            //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
+                            Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, null, null, codigo);
+                        } else {
+                            System.out.println("resultSetAperturaCierreDeTurno es nulo");
+                            Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
+                        }
+                    } else {
+                        System.out.println("No se pudo obtener usuarios en línea");
+                        Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
+                    }
+                } else {
+                    System.out.println("No se pudo obtener lector por puerto");
+                    Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
+                }
             }
             /*
                                 conn.getConnection().close();
@@ -460,7 +484,8 @@ public class TwoWaySerialComm {
      */
     private CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec connUnitec, String codigo) {
         System.out.println("cajaaaaaaaaaaaaaaaaaaaa entreeeeeeeeeeeeeeeeeeeeeeee");
-        CajaUnitec caja = Query.getCajaPorCodigoUnitec(connUnitec, codigo);
+        Query a = new Query();
+        CajaUnitec caja = a.getCajaPorCodigoUnitec(connUnitec, codigo);
 
         System.out.println("cajaaaaaaaaaaaaaaaaaaaa" + caja);
         return caja;

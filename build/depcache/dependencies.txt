@@ -94,6 +94,7 @@ java.lang.Class
 java.util.Date
 java.io.PrintStream
 baseDeDatos.ConexionBaseDeDatosSellado
+java.lang.Long
 java.sql.Statement
 sellado.Query
 sellado.models.CajaSellado
@@ -106,7 +107,6 @@ java.util.logging.Level
 java.lang.Object
 sellado.models.CajaUnitec
 ||:sellado.Sellado$Sistema
-java.lang.StringBuilder
 java.lang.Thread
 baseDeDatos.ConexionBaseDeDatosSellado
 sellado.Query
@@ -114,11 +114,8 @@ java.sql.ResultSet
 java.lang.Class
 sellado.Sellado$Sistema
 java.util.logging.Level
-java.lang.System
-java.io.PrintStream
 sellado.Sellado
 java.util.logging.Logger
-javafx.scene.control.TextArea
 java.sql.Connection
 java.sql.SQLException
 ||:baseDeDatos.ConexionBaseDeDatosUnitec
@@ -180,6 +177,7 @@ java.lang.StringBuilder
 java.lang.Class
 java.util.logging.Level
 java.text.ParseException
+java.lang.Long
 Utils.Date
 java.util.logging.Logger
 java.text.SimpleDateFormat

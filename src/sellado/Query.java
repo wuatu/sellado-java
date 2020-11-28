@@ -24,6 +24,7 @@ import sellado.models.CajaUnitec;
  */
 public class Query {
 
+    //public String texto=null;
     public static ResultSet getRfidSalidaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
         try {
             Statement statement = conn.getConnection().createStatement();
@@ -270,7 +271,7 @@ public class Query {
         return null;
     }
 
-    public static void insertRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuariosEnLinea, ResultSet resultSetGetLectorByPort, ResultSet crearRegistroDiarioCajaSellada, CajaSellado caja, String codigo) {
+    public static void insertRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuariosEnLinea, ResultSet resultSetGetLectorByPort, ResultSet crearRegistroDiarioCajaSellada, CajaSellado cajaSellado, CajaUnitec cajaUnitec, String codigo) {
         try {
             resultSetUsuariosEnLinea.beforeFirst();
             resultSetGetLectorByPort.beforeFirst();
@@ -294,19 +295,27 @@ public class Query {
                                 + "nombre_usuario,"
                                 + "apellido_usuario,"
                                 + "codigo_de_barra,"
-                                + "id_caja,"
-                                + "envase_caja,"
-                                + "variedad_caja,"
-                                + "categoria_caja,"
-                                + "calibre_caja,"
-                                + "correlativo_caja,"
-                                + "ponderacion_caja,"
+                                + "Cod_Caja_Unitec,"
+                                + "Codigo_Confection_Unitec,"
+                                + "Confection_Unitec,"
+                                + "Codigo_Embalaje_Unitec,"
+                                + "Embalaje_Unitec,"
+                                + "Codigo_Envase_Unitec,"
+                                + "Envase_Unitec,"
+                                + "Categoria_Unitec,"
+                                + "Categoria_Timbrada_Unitec,"
+                                + "Codigo_Calibre_Unitec,"
+                                + "Calibre_Unitec,"
+                                + "id_caja_sellada,"
+                                + "ponderacion_caja_sellada,"
                                 + "fecha_sellado,"
                                 + "hora_sellado,"
+                                + "fecha_sellado_time,"
                                 + "fecha_validacion,"
                                 + "hora_validacion,"
+                                + "fecha_validacion_time,"
                                 + "id_apertura_cierre_de_turno)"
-                                + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                                + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)";
                         // create the mysql insert preparedstatement
                         PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                         preparedStmt.setInt(1, resultSetUsuariosEnLinea.getInt("id_calibrador"));
@@ -324,34 +333,74 @@ public class Query {
                         preparedStmt.setString(13, resultSetUsuariosEnLinea.getString("nombre_usuario"));
                         preparedStmt.setString(14, resultSetUsuariosEnLinea.getString("apellido_usuario"));
                         preparedStmt.setString(15, codigo);
-                        if (caja != null) {
-                            preparedStmt.setInt(16, caja.getId());
-                        } else {
-                            preparedStmt.setInt(16, -1);
-                        }
-                        preparedStmt.setString(17, caja.getEnvase());
-                        preparedStmt.setString(18, caja.getVariedad());
-                        preparedStmt.setString(19, caja.getCategoria());
-                        preparedStmt.setString(20, caja.getCalibre());
-                        preparedStmt.setString(21, caja.getCorrelativo());
-                        preparedStmt.setInt(22, caja.getPonderacion());
-                        preparedStmt.setString(23, Date.getDateString());
-                        preparedStmt.setString(24, Date.getHourString());
-                        preparedStmt.setString(25, "");
-                        preparedStmt.setString(26, "");
-                        preparedStmt.setInt(27, crearRegistroDiarioCajaSellada.getInt("id"));
-                        preparedStmt.execute();
-                        Query.insertRegistroProduccion("ok",
-                                "Se inserta envase: " + caja.getEnvase() + ""
-                                + ", código: " + codigo + ""
-                                + ", colaborador: " + resultSetUsuariosEnLinea.getString("usuario_rut") + ""
-                                + " " + resultSetUsuariosEnLinea.getString("nombre_usuario") + ""
-                                + " " + resultSetUsuariosEnLinea.getString("apellido_usuario") + ""
-                                + ", calibrador: " + resultSetUsuariosEnLinea.getString("nombre_calibrador") + ""
-                                + ", linea: " + resultSetUsuariosEnLinea.getString("nombre_linea"),
-                                Utils.Date.getDateString(),
-                                Utils.Date.getHourString());
 
+                        if (cajaUnitec != null) {
+                            System.out.println("caja unitec entre y eso nulooooooooooo");
+                            preparedStmt.setString(16, cajaUnitec.getCod_Caja());
+                            preparedStmt.setString(17, cajaUnitec.getCodigo_Confection());
+                            preparedStmt.setString(18, cajaUnitec.getConfection());
+                            preparedStmt.setString(19, cajaUnitec.getCodigo_Embalaje());
+                            preparedStmt.setString(20, cajaUnitec.getEmbalaje());
+                            preparedStmt.setString(21, cajaUnitec.getCodigo_Envase());
+                            preparedStmt.setString(22, cajaUnitec.getEnvase());
+                            preparedStmt.setString(23, cajaUnitec.getCategoria());
+                            preparedStmt.setString(24, cajaUnitec.getCategoria_Timbrada());
+                            preparedStmt.setString(25, cajaUnitec.getCodigo_Calibre());
+                            preparedStmt.setString(26, cajaUnitec.getCalibre());
+                        } else {
+                            preparedStmt.setString(16, null);
+                            preparedStmt.setString(17, null);
+                            preparedStmt.setString(18, null);
+                            preparedStmt.setString(19, null);
+                            preparedStmt.setString(20, null);
+                            preparedStmt.setString(21, null);
+                            preparedStmt.setString(22, null);
+                            preparedStmt.setString(23, null);
+                            preparedStmt.setString(24, null);
+                            preparedStmt.setString(25, null);
+                            preparedStmt.setString(26, null);
+                        }
+
+                        if (cajaSellado != null) {
+                            preparedStmt.setInt(27, cajaSellado.getId());
+                            preparedStmt.setInt(28, cajaSellado.getPonderacion());
+                        } else {
+                            preparedStmt.setInt(27, -1);
+                            preparedStmt.setInt(28, -1);
+                        }
+
+                        preparedStmt.setString(29, Date.getDateString());
+                        preparedStmt.setString(30, Date.getHourString());
+                        preparedStmt.setLong(31, Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
+                        preparedStmt.setString(32, "");
+                        preparedStmt.setString(33, "");
+                        preparedStmt.setLong(34, -1);
+                        preparedStmt.setInt(35, crearRegistroDiarioCajaSellada.getInt("id"));
+                        preparedStmt.execute();
+
+                        if (cajaSellado != null) {
+                            Query.insertRegistroProduccion("ok",
+                                    "Se inserta envase correctamente: " + cajaSellado.getEnvase() + ""
+                                    + ", código: " + codigo + ""
+                                    + ", colaborador: " + resultSetUsuariosEnLinea.getString("usuario_rut") + ""
+                                    + " " + resultSetUsuariosEnLinea.getString("nombre_usuario") + ""
+                                    + " " + resultSetUsuariosEnLinea.getString("apellido_usuario") + ""
+                                    + ", calibrador: " + resultSetUsuariosEnLinea.getString("nombre_calibrador") + ""
+                                    + ", linea: " + resultSetUsuariosEnLinea.getString("nombre_linea"),
+                                    Utils.Date.getDateString(),
+                                    Utils.Date.getHourString());
+                        } else {
+                            Query.insertRegistroProduccion("warning",
+                                    "Se inserta envase con datos incompletos de caja UNITEC " + ""
+                                    + ", código: " + codigo + ""
+                                    + ", colaborador: " + resultSetUsuariosEnLinea.getString("usuario_rut") + ""
+                                    + " " + resultSetUsuariosEnLinea.getString("nombre_usuario") + ""
+                                    + " " + resultSetUsuariosEnLinea.getString("apellido_usuario") + ""
+                                    + ", calibrador: " + resultSetUsuariosEnLinea.getString("nombre_calibrador") + ""
+                                    + ", linea: " + resultSetUsuariosEnLinea.getString("nombre_linea"),
+                                    Utils.Date.getDateString(),
+                                    Utils.Date.getHourString());
+                        }
                     }
                 }
             }
@@ -422,13 +471,11 @@ public class Query {
                 CajaSellado caja = null;
                 while (resultSet.next()) {
                     int id = resultSet.getInt("id");
+                    String codigo_envase = resultSet.getString("codigo_envase");
                     String envase = resultSet.getString("envase");
-                    String variedad = resultSet.getString("variedad");
-                    String categoria = resultSet.getString("categoria");
-                    String calibre = resultSet.getString("calibre");
-                    String correlativo = resultSet.getString("correlativo");
+                    String descripcion = resultSet.getString("descripcion");
                     int ponderacion = resultSet.getInt("ponderacion");
-                    caja = new CajaSellado(id, envase, variedad, categoria, calibre, correlativo, ponderacion);
+                    caja = new CajaSellado(id, codigo_envase, envase, descripcion, ponderacion);
                 }
                 return caja;
             }
@@ -439,7 +486,7 @@ public class Query {
         return null;
     }
 
-    public static CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
+    public CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
         try {
             if (conn.getConnection() != null) {
                 String query = "select * from Danich_DatosCajas where Cod_Caja =" + codigo + "";
@@ -462,9 +509,11 @@ public class Query {
                         String Codigo_Calibre = resultSet.getString("Codigo_Calibre");
                         String Calibre = resultSet.getString("Calibre");
                         caja = new CajaUnitec(Cod_Caja, Codigo_Confection, Confection, Codigo_Embalaje, Embalaje, Codigo_Envase, Envase, Categoria, Categoria_Timbrada, Codigo_Calibre, Calibre);
+                        System.out.println("caja" + caja.getCalibre());
                     }
                     if (caja != null) {
                         Query.insertRegistroProduccion("ok", "Se encuentra envase: " + caja.getEnvase() + " por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
+                        //texto="Se encuentra envase: " + caja.getEnvase() + " por código: " + codigo;
                         return caja;
                     }
                     Query.insertRegistroProduccion("err", "No se pudo encontrar caja en base de datos UNITEC por código: " + codigo, Utils.Date.getDateString(), Utils.Date.getHourString());
@@ -523,13 +572,16 @@ public class Query {
         try {
             String horaSellado = null;
             String fechaSellado = null;
+            long fechaSelladoTime = 0;
             resultSet.beforeFirst();
             while (resultSet.next()) {
                 horaSellado = resultSet.getString("hora_sellado");
                 fechaSellado = resultSet.getString("fecha_sellado");
+                fechaSelladoTime = resultSet.getLong("fecha_sellado_time");
 
                 System.out.println("hora_sellado: " + horaSellado);
                 System.out.println("fecha_Sellado: " + fechaSellado);
+                System.out.println("fecha_sellado_time" + fechaSelladoTime);
 
                 java.util.Date dateSellado = Date.getDateParseStringToDate(fechaSellado, horaSellado);
                 java.util.Date dateValidacion = new java.util.Date();
@@ -538,13 +590,14 @@ public class Query {
                 if (tiempoTranscurridoEnMinutos > waitingTime) {
                     isBeforeTime = true;
                 }
-                String query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
+                String query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, fecha_sellado_time = ?. is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, Date.getDateString());
                 preparedStmt.setString(2, Date.getHourString());
-                preparedStmt.setBoolean(3, true);
-                preparedStmt.setBoolean(4, isBeforeTime);
-                preparedStmt.setString(5, codigo);
+                preparedStmt.setLong(3, Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
+                preparedStmt.setBoolean(4, true);
+                preparedStmt.setBoolean(5, isBeforeTime);
+                preparedStmt.setString(6, codigo);
                 preparedStmt.executeUpdate();
             }
         } catch (SQLException ex) {
@@ -657,7 +710,6 @@ public class Query {
     public static void insertRegistroProduccion(String nombre, String registro, String fecha, String hora) {
         ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
         try {
-            System.out.println("hora:" + hora);
             String query = " insert into registro_produccion (id_colaborador, nombre_colaborador, apellido_colaborador, registro, fecha, hora)"
                     + " values (?, ?, ?, ?, ?, ?)";
             PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
@@ -669,6 +721,7 @@ public class Query {
             preparedStmt.setString(6, hora);
             preparedStmt.execute();
         } catch (SQLException ex) {
+            System.out.println("error:" + ex);
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
         try {

@@ -42,7 +42,6 @@ import java.util.Observable;
 import java.util.Scanner;
 import sellado.Query;
 import sellado.Sellado;
-import sellado.models.CajaSellado;
 import sellado.models.CajaUnitec;
 
 /**

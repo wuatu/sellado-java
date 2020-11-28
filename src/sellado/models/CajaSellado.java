@@ -10,22 +10,21 @@ package sellado.models;
  * @author crist
  */
 public class CajaSellado {
+    
+    int id;
+    String codigo_envase;
+    String envase;
+    String descripcion;
+    int ponderacion;
 
-    int id = 0;
-    String envase = "";
-    String variedad = "";
-    String categoria = "";
-    String calibre = "";
-    String correlativo = "";
-    int ponderacion = 0;
+    public CajaSellado() {
+    }
 
-    public CajaSellado(int id, String envase, String variedad, String categoria, String calibre, String correlativo, int ponderacion) {
+    public CajaSellado(int id, String codigo_envase, String envase, String descripcion, int ponderacion) {
         this.id = id;
+        this.codigo_envase = codigo_envase;
         this.envase = envase;
-        this.variedad = variedad;
-        this.categoria = categoria;
-        this.calibre = calibre;
-        this.correlativo = correlativo;
+        this.descripcion = descripcion;
         this.ponderacion = ponderacion;
     }
 
@@ -37,6 +36,14 @@ public class CajaSellado {
         this.id = id;
     }
 
+    public String getCodigo_envase() {
+        return codigo_envase;
+    }
+
+    public void setCodigo_envase(String codigo_envase) {
+        this.codigo_envase = codigo_envase;
+    }
+
     public String getEnvase() {
         return envase;
     }
@@ -45,36 +52,12 @@ public class CajaSellado {
         this.envase = envase;
     }
 
-    public String getVariedad() {
-        return variedad;
+    public String getDescripcion() {
+        return descripcion;
     }
 
-    public void setVariedad(String variedad) {
-        this.variedad = variedad;
-    }
-
-    public String getCategoria() {
-        return categoria;
-    }
-
-    public void setCategoria(String categoria) {
-        this.categoria = categoria;
-    }
-
-    public String getCalibre() {
-        return calibre;
-    }
-
-    public void setCalibre(String calibre) {
-        this.calibre = calibre;
-    }
-
-    public String getCorrelativo() {
-        return correlativo;
-    }
-
-    public void setCorrelativo(String correlativo) {
-        this.correlativo = correlativo;
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
     }
 
     public int getPonderacion() {
@@ -84,5 +67,7 @@ public class CajaSellado {
     public void setPonderacion(int ponderacion) {
         this.ponderacion = ponderacion;
     }
-
+    
+    
+    
 }

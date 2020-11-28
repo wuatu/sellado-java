@@ -9,6 +9,7 @@ import baseDeDatos.ConexionBaseDeDatosSellado;
 import ModbusTCPJamod.ModbusTCP;
 import PortComJSerial.PortCOM;
 import PortComJSerial.PortCOMSettings;
+import baseDeDatos.ConexionBaseDeDatosUnitec;
 import gnu.io.SerialPort;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -66,6 +67,11 @@ public class Sellado extends Application {
         primaryStage.setTitle("***Danich*** conexión a dispositivos");
         primaryStage.setScene(scene);
         primaryStage.show();
+        
+        ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
+        Query a=new Query();
+        a.getCajaPorCodigoUnitec(connUnitec, "20000712");
+        //this.textArea.setText(a.texto);
 
         Sistema sistema = new Sistema();
         sistema.start();
@@ -101,10 +107,13 @@ public class Sellado extends Application {
 
             ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
 
+            /*
+            
             if (conn.error != null) {
                 textArea.setText(textArea.getText() + "\n" + conn.error);
                 this.stop();
             }
+            
             //obtener lector validador        
             ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
 
@@ -119,6 +128,7 @@ public class Sellado extends Application {
             conn.disconnection();
             conn = null;
 
+            */
             //obtener lectores en linea de tabla "linea" 
             conn = new ConexionBaseDeDatosSellado();
             ResultSet resultSetLectores = Query.getLectoresJoinLineaJoinCalibrador(conn);
@@ -131,7 +141,7 @@ public class Sellado extends Application {
             }
             conn.disconnection();
             conn = null;
-
+           /*
             //obtener RFID de tabla "rfid"
             conn = new ConexionBaseDeDatosSellado();
             ResultSet resultSetRFID = Query.getRFIDJoinLineaJoinCalibrador(conn);
@@ -158,6 +168,7 @@ public class Sellado extends Application {
             conn.disconnection();
             conn = null;
             
+            
             //obtener RFID de tabla "rfid_registro_colaborador"
             conn = new ConexionBaseDeDatosSellado();
             ResultSet resultSetRfidRegistroColaborador = Query.getRfidRegistroColaborador(conn);
@@ -174,6 +185,8 @@ public class Sellado extends Application {
             System.out.println("Configuracion inicial realizada satisfactoriamente");
 
             this.stop();
+            */
+            
         }
     }
 
