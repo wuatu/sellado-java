@@ -27,9 +27,14 @@ public class Query {
     //public String texto=null;
     public static ResultSet getRfidSalidaJoinCalibrador(ConexionBaseDeDatosSellado conn) {
         try {
+            String query = "select * from rfid_salida inner join calibrador on fk_calibrador = calibrador.id";
             Statement statement = conn.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from rfid_salida inner join calibrador on fk_calibrador = calibrador.id");
-            return resultSet;
+            PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se obtuvo RFID salida de calibrador", "No existe registro de RFID de salida de calibrador")) {
+                return resultSet;
+            }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener RFIDJoinLineaJoinCalibrador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
@@ -39,9 +44,13 @@ public class Query {
 
     public static ResultSet getRfidRegistroColaborador(ConexionBaseDeDatosSellado conn) {
         try {
-            Statement statement = conn.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from rfid_registro_colaborador");
-            return resultSet;
+            String query = "select * from rfid_registro_colaborador";
+            PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se obtuvo RFID de registro de colaborador", "No existe registro de RFID de registro de colaborador")) {
+                return resultSet;
+            }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRfidRegistroColaborador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
@@ -450,9 +459,14 @@ public class Query {
 
     public static ResultSet getLectorValidador(ConexionBaseDeDatosSellado conn) {
         try {
-            Statement statement = conn.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from lector_validador");
-            return resultSet;
+            String query = "select * from lector_validador";
+            PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            ResultSet resultSet = preparedStatement.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Lector validador obtenido", "No existe registro lector validador")) {
+                return resultSet;
+            }
+
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getLectorValidador SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
@@ -486,9 +500,13 @@ public class Query {
         return null;
     }
 
-    public CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
+    public static CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
         try {
             if (conn.getConnection() != null) {
+                
+                codigo = "20000709";
+                System.out.println("codigooooo hackeado:"+codigo);
+                
                 String query = "select * from Danich_DatosCajas where Cod_Caja =" + codigo + "";
                 PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                         ResultSet.CONCUR_UPDATABLE);

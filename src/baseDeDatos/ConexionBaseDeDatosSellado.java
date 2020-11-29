@@ -20,7 +20,7 @@ public class ConexionBaseDeDatosSellado {
 
     private String database = "danich_sellado";
     private String usuario = "root";
-    private String password = "D@nich155";
+    private String password = "1121992Wuatu";
     private String url = "jdbc:mysql://127.0.0.1:3306/" + database + "?useUnicode=true&useJDBCCompliantTimezoneShift=true&useLegacyDatetimeCode=false&serverTimezone=UTC";
 
     Connection conn = null;

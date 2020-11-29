@@ -88,6 +88,8 @@ public class TwoWaySerialComm {
         if (existPort == false) {
             erroresString.add("Error al conectar al puerto: " + port + ", NO existe conexión:" + tag);
             return;
+        } else {
+            erroresString.add("Conectado correctamente " + tag + " al puerto: " + port);
         }
 
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
@@ -126,6 +128,8 @@ public class TwoWaySerialComm {
         if (existPort == false) {
             erroresString.add("Error al conectar al puerto: " + port + ", NO existe conexión:" + tag);
             return;
+        } else {
+            erroresString.add("Conectado correctamente " + tag + " al puerto: " + port);
         }
 
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
@@ -188,6 +192,8 @@ public class TwoWaySerialComm {
         if (existPort == false) {
             erroresString.add("Error al conectar al puerto: " + port + ", NO existe conexión:" + tag);
             return;
+        } else {
+            erroresString.add("Conectado correctamente " + tag + " al puerto: " + port);
         }
 
         CommPortIdentifier portIdentifier = CommPortIdentifier.getPortIdentifier(port);
@@ -483,10 +489,8 @@ public class TwoWaySerialComm {
     }
      */
     private CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec connUnitec, String codigo) {
-        System.out.println("cajaaaaaaaaaaaaaaaaaaaa entreeeeeeeeeeeeeeeeeeeeeeee");
-        Query a = new Query();
-        CajaUnitec caja = a.getCajaPorCodigoUnitec(connUnitec, codigo);
-
+        //Query a = new Query();
+        CajaUnitec caja = Query.getCajaPorCodigoUnitec(connUnitec, codigo);
         System.out.println("cajaaaaaaaaaaaaaaaaaaaa" + caja);
         return caja;
     }
