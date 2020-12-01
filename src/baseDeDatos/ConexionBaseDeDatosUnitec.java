@@ -36,13 +36,15 @@ public class ConexionBaseDeDatosUnitec {
 
     public ConexionBaseDeDatosUnitec() {
         int i = 1;
-        while (i < 1) {
+        while (i < 5) {
             try {
                 //obtiene la conexion
                 conn = DriverManager.getConnection(conexionUrl);
                 if (conn != null) {
                     System.out.println("Conexion a base de datos UNITEC establecida");
                     break;
+                } else{
+                    System.out.println("erooooooooooooooooooooooooooooooooooooooooooooooooor");
                 }
             } catch (SQLException ex) {
                 this.error = ex.getMessage();

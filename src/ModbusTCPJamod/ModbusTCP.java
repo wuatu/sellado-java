@@ -137,7 +137,7 @@ public class ModbusTCP {
                                 codigo = Utils.HexToASCII.limpiarString(codigo);
 
                                 //System.out.println("****** CODIGO LEIDO ******");
-                                System.out.println("Código: " + codigo);
+                                System.out.println("Código lector validador: " + codigo);
 
                                 //inserta codigo en tabla lectorValidadpr_en_calibrador
                                 Query.insertLectorValidadorEnCalibrador(calibradorId, codigo, Date.getDateString(), Date.getHourString());

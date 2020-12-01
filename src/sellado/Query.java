@@ -502,10 +502,11 @@ public class Query {
 
     public static CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec conn, String codigo) {
         try {
+            //codigo = "20000709";
             if (conn.getConnection() != null) {
                 
-                codigo = "20000709";
-                System.out.println("codigooooo hackeado:"+codigo);
+                
+                //System.out.println("codigooooo hackeado:"+codigo);
                 
                 String query = "select * from Danich_DatosCajas where Cod_Caja =" + codigo + "";
                 PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
@@ -608,11 +609,13 @@ public class Query {
                 if (tiempoTranscurridoEnMinutos > waitingTime) {
                     isBeforeTime = true;
                 }
-                String query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, fecha_sellado_time = ?. is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
+                String query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, fecha_validacion_time = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, Date.getDateString());
                 preparedStmt.setString(2, Date.getHourString());
-                preparedStmt.setLong(3, Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
+                System.out.println("long time:"+Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
+                long validacionTime=Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString());
+                preparedStmt.setLong(3, validacionTime);
                 preparedStmt.setBoolean(4, true);
                 preparedStmt.setBoolean(5, isBeforeTime);
                 preparedStmt.setString(6, codigo);
@@ -635,10 +638,10 @@ public class Query {
         ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
         try {
             Statement statement = conn.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from lectorValidador_en_calibrador where fk_calibrador='" + calibradorId + "'");
+            ResultSet resultSet = statement.executeQuery("select * from lector_validador_en_calibrador where fk_calibrador='" + calibradorId + "'");
             if (isEmptyResultSet(resultSet, "Se obtuvo lector validador de calibrador por id: " + calibradorId, "No se pudo obtener lector validador de calibrador por id: " + calibradorId)) {
-                String query = " insert into lectorValidador_en_calibrador (codigo,fecha, hora,fk_calibrador)"
-                        + " values (?, ?, ?, ?, ?)";
+                String query = " insert into lector_validador_en_calibrador (codigo,fecha, hora,fk_calibrador)"
+                        + " values (?, ?, ?, ?)";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, codigo);
                 preparedStmt.setString(2, fecha);
@@ -646,7 +649,7 @@ public class Query {
                 preparedStmt.setInt(4, calibradorId);
                 preparedStmt.execute();
             } else {
-                String query = "update lectorValidador_en_calibrador set codigo = ?, fecha = ?, hora=? where fk_calibrador = ?";
+                String query = "update lector_validador_en_calibrador set codigo = ?, fecha = ?, hora=? where fk_calibrador = ?";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 System.out.println(codigo);
                 System.out.println(fecha);

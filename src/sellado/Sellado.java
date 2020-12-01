@@ -115,6 +115,11 @@ public class Sellado extends Application {
 
             //obtener lector validador        
             ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
+            try {
+                resultSetLectorValidador.beforeFirst();
+            } catch (SQLException ex) {
+                Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+            }
             if (resultSetLectorValidador != null) {
                 textArea.setText(textArea.getText() + "\n" + "- Iniciando lector validador...");
                 //crear hilo lector validador                
@@ -364,7 +369,7 @@ public class Sellado extends Application {
                 int waitingTime = resultSetLector.getInt("max_wait_time");
                 int registroInicial = resultSetLector.getInt("registro_inicial_lectura");
                 int calibrador = resultSetLector.getInt("fk_calibrador");
-
+                System.out.println("registro inicial: "+registroInicial);
                 //creación de hilo lector validador
                 modbusTCP = new ModbusTCP(nombre, ip, waitingTime, registroInicial, calibrador);
                 modbusTCPArray.add(modbusTCP);

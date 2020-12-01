@@ -45,7 +45,7 @@ public class Date {
         return null;
     }    
     
-    public static Long getDateParseStringToLongTime(String fecha, String hora) {
+    public static long getDateParseStringToLongTime(String fecha, String hora) {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("America/Santiago"));
         try {
@@ -53,7 +53,7 @@ public class Date {
         } catch (ParseException ex) {
             Logger.getLogger(Date.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return null;
+        return -1;
     } 
     
 }

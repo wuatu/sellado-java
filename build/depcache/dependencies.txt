@@ -94,7 +94,6 @@ java.lang.Class
 java.util.Date
 java.io.PrintStream
 baseDeDatos.ConexionBaseDeDatosSellado
-java.lang.Long
 java.sql.Statement
 sellado.Query
 sellado.models.CajaSellado
@@ -181,7 +180,6 @@ java.lang.StringBuilder
 java.lang.Class
 java.util.logging.Level
 java.text.ParseException
-java.lang.Long
 Utils.Date
 java.util.logging.Logger
 java.text.SimpleDateFormat
@@ -189,14 +187,6 @@ java.util.TimeZone
 java.lang.Object
 java.lang.String
 java.util.Date
-||:Utils.HexToASCII
-java.lang.Object
-java.lang.String
-java.lang.StringBuilder
-java.lang.System
-java.io.PrintStream
-java.lang.Integer
-Utils.HexToASCII
 ||:PortComJSerial.TwoWaySerialComm$SerialWriter
 java.lang.Object
 java.io.InputStream
@@ -206,6 +196,14 @@ PortComJSerial.TwoWaySerialComm
 java.lang.Runnable
 java.io.IOException
 java.io.OutputStream
+||:Utils.HexToASCII
+java.lang.Object
+java.lang.String
+java.lang.StringBuilder
+java.lang.System
+java.io.PrintStream
+java.lang.Integer
+Utils.HexToASCII
 ||:PortComJSerial.PortCOM
 java.lang.Object
 PortComJSerial.TwoWaySerialComm

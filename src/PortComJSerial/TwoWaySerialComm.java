@@ -299,7 +299,7 @@ public class TwoWaySerialComm {
             }
 
             //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
-            System.out.println("conn unitecccccccc" + connUnitec);
+            System.out.println("conn unitecccccccc" + connUnitec.getConnection());
             CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(connUnitec, codigo);
 
             if (cajaUnitec != null) {
@@ -490,6 +490,7 @@ public class TwoWaySerialComm {
      */
     private CajaUnitec getCajaPorCodigoUnitec(ConexionBaseDeDatosUnitec connUnitec, String codigo) {
         //Query a = new Query();
+        //codigo = "20000709";
         CajaUnitec caja = Query.getCajaPorCodigoUnitec(connUnitec, codigo);
         System.out.println("cajaaaaaaaaaaaaaaaaaaaa" + caja);
         return caja;
