@@ -54,7 +54,7 @@ public class ModbusTCP {
 
             addr = InetAddress.getByName(ip);
 
-            System.out.println("asdsadasda"+addr);
+            System.out.println("asdsadasda" + addr);
 
             //2. Open the connection            
             tcpMasterConnection = new TCPMasterConnection(addr);
@@ -155,8 +155,10 @@ public class ModbusTCP {
 
             thread = new Thread(runable);
             thread.start();
+            this.error = "Conectado correctamente lector validador ip: " + ip;
+
         } catch (Exception ex) {
-            this.error= "Error conexion sensor validador ip: " +ip+", " + ex.getMessage();
+            this.error = "Error conexion lector validador ip: " + ip + ", " + ex.getMessage();
             System.out.println("Error ModbusTCP" + "Error conexion sensor validador Exception: " + ex.getMessage());
             Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador Exception: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
         }

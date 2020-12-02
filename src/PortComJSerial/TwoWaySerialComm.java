@@ -308,8 +308,10 @@ public class TwoWaySerialComm {
                     ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
                     if (resultSetUsuariosEnLinea != null) {
                         //busca caja en base de datos sellado para obtener ponderación de caja
+                        cajaUnitec.setCodigo_Envase("48");
                         CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
-
+                        
+                        
                         //obtener id de apertura_cierre_de_turno
                         ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
                         if (resultSetAperturaCierreDeTurno != null) {

@@ -474,13 +474,13 @@ public class Query {
         return null;
     }
 
-    public static CajaSellado getCajaPorCodigoSellado(ConexionBaseDeDatosSellado conn, String envaseUnitec, String categoriaUnitec, String calibreUnitec) {
+    public static CajaSellado getCajaPorCodigoSellado(ConexionBaseDeDatosSellado conn, String codigoEnvaseUnitec, String categoriaUnitec, String calibreUnitec) {
         try {
-            String query = "select * from caja where envase like '%" + envaseUnitec + "%' limit 1";
+            String query = "select * from caja where codigo_envase = " + codigoEnvaseUnitec + " limit 1";
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!isEmptyResultSet(resultSet, "Se encotró envase de caja por codigo:" + envaseUnitec, "No se encotró envase de caja por codigo:" + envaseUnitec)) {
+            if (!isEmptyResultSet(resultSet, "Se encotró envase de caja por codigo:" + codigoEnvaseUnitec, "No se encotró envase de caja por codigo:" + codigoEnvaseUnitec)) {
                 resultSet.beforeFirst();
                 CajaSellado caja = null;
                 while (resultSet.next()) {
@@ -606,7 +606,7 @@ public class Query {
                 java.util.Date dateValidacion = new java.util.Date();
                 int tiempoTranscurridoEnMinutos = (int) ((dateValidacion.getTime() - dateSellado.getTime()) / 60000);
                 boolean isBeforeTime = false;
-                if (tiempoTranscurridoEnMinutos > waitingTime) {
+                if (tiempoTranscurridoEnMinutos < waitingTime) {
                     isBeforeTime = true;
                 }
                 String query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, fecha_validacion_time = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
