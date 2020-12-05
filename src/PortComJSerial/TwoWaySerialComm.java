@@ -223,11 +223,11 @@ public class TwoWaySerialComm {
 
         private InputStream in;
         private byte[] buffer = new byte[1024];
-        String tag;
-        String port;
-        String codigo;
-        String calibradorId;
-        String lineaId;
+        String tag = "";
+        String port = "";
+        String codigo = "";
+        String calibradorId = "";
+        String lineaId = "";
 
         public SerialReader(InputStream in, String tag, String port, String calibradorId, String lineaId) {
             this.in = in;
@@ -280,8 +280,9 @@ public class TwoWaySerialComm {
     public void ejecutarAccionLectorRFID(String cod, String tag, String port, String calibradorId, String lineaId) {
 
         String codigo = Utils.HexToASCII.limpiarString(cod);
+        System.out.println("codigo length:" + codigo.length());
         for (int i = 0; i < codigo.length(); i++) {
-            System.out.println("codigoql: " + codigo.charAt(i));
+            System.out.println("codigo: " + codigo.charAt(i));
         }
 
         System.out.println("Código: " + codigo);
@@ -310,8 +311,7 @@ public class TwoWaySerialComm {
                         //busca caja en base de datos sellado para obtener ponderación de caja
                         cajaUnitec.setCodigo_Envase("48");
                         CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
-                        
-                        
+
                         //obtener id de apertura_cierre_de_turno
                         ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
                         if (resultSetAperturaCierreDeTurno != null) {
@@ -402,7 +402,7 @@ public class TwoWaySerialComm {
                 //Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
         } else if (tag == "RFID_SALIDA") {
-            //inserta codigo rfid en tabla rfidSalida_en_calibrador
+            //inserta codigo rfid en tabla rfid_salida_en_calibrador
             Query.insertRfidSalidaEnCalibrador(conn, calibradorId, codigo, Date.getDateString(), Date.getHourString());
 
             //consulta para saber a que colaborador le pertence el codigo rfid leido
@@ -431,7 +431,7 @@ public class TwoWaySerialComm {
                 Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
 
-        } else if (tag == "RFID_REGISTRO_COLABORADOR") {
+        } else if (tag.equals("RFID_REGISTRO_COLABORADOR") ) {
             //inserta codigo rfid en tabla rfidSalida_en_calibrador
             Query.insertRegistroRfid(conn, codigo, Date.getDateString(), Date.getHourString());
         }
