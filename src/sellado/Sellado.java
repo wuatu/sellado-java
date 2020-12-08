@@ -342,6 +342,7 @@ public class Sellado extends Application {
     private void crearThreadRfidRegistroColaborador(ResultSet resultSetRfidRegistroColaborador) {
         try {
             while (resultSetRfidRegistroColaborador.next()) {
+                //String calibradorId = resultSetRfidRegistroColaborador.getString("calibrador.id");
                 String nombre = resultSetRfidRegistroColaborador.getString("nombre");
                 String port = resultSetRfidRegistroColaborador.getString("ip");
                 String baudRate = resultSetRfidRegistroColaborador.getString("baudRate");

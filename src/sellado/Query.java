@@ -509,7 +509,19 @@ public class Query {
             if (conn.getConnection() != null) {
 
                 //System.out.println("codigooooo hackeado:"+codigo);
-                String query = "select * from Danich_DatosCajas where Cod_Caja =" + codigo + "";
+
+                if (codigo == null) {
+                    Query.insertRegistroProduccion("warning", "Código leído es nulo" , Utils.Date.getDateString(), Utils.Date.getHourString());
+                    Query.insertRegistroDev("warning", "Código leído es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
+                    return null;
+                }
+                if (codigo.equalsIgnoreCase("")) {
+                    Query.insertRegistroProduccion("warning", "Código leído es vacío" , Utils.Date.getDateString(), Utils.Date.getHourString());
+                    Query.insertRegistroDev("warning", "Código leído es vacío", Utils.Date.getDateString(), Utils.Date.getHourString());
+                    return null;
+                }
+                String query = "select * from Danich_DatosCajas where Cod_Caja = " + codigo + "";
+
                 PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                         ResultSet.CONCUR_UPDATABLE);
                 ResultSet resultSet = preparedStatement.executeQuery();
@@ -831,9 +843,9 @@ public class Query {
     public static void insertRfidSalidaEnCalibrador(ConexionBaseDeDatosSellado conn, String calibradorId, String codigo, String fecha, String hora) {
         try {
             Statement statement = conn.getConnection().createStatement();
-            ResultSet resultSet = statement.executeQuery("select * from rfid_en_linea where fk_calibrador='" + calibradorId + "'");
+            ResultSet resultSet = statement.executeQuery("select * from rfid_salida_en_calibrador where fk_calibrador='" + calibradorId + "'");
             if (isEmptyResultSet(resultSet, "Se obtuvo RFID de linea por id linea: " + calibradorId, "No se pudo obtener lector de linea por id linea: " + calibradorId)) {
-                String query = " insert into rfid_en_linea (codigo,fecha, hora,fk_calibrador)"
+                String query = " insert into rfid_salida_en_calibrador (codigo,fecha, hora,fk_calibrador)"
                         + " values (?, ?, ?, ?)";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, codigo);
@@ -842,7 +854,7 @@ public class Query {
                 preparedStmt.setString(4, calibradorId);
                 preparedStmt.execute();
             } else {
-                String query = "update rfid_en_linea set codigo = ?, fecha = ?, hora=? where fk_calibrador = ?";
+                String query = "update rfid_salida_en_calibrador set codigo = ?, fecha = ?, hora=? where fk_calibrador = ?";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 System.out.println(codigo);
                 System.out.println(fecha);
@@ -865,6 +877,7 @@ public class Query {
 
             String query = " insert into registro_rfid (codigo)"
                     + " values (?)";
+            System.out.println("codigo:"+codigo);
             PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
             preparedStmt.setString(1, codigo);
             preparedStmt.execute();

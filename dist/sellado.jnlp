@@ -14,7 +14,7 @@
     <jar href="lib\mssql-jdbc-8.4.1.jre8.jar" size="1300917" download="eager" />
     <jar href="lib\mysql-connector-java-8.0.21.jar" size="2397321" download="eager" />
     <jar href="lib\rxtx-2.2.jar" size="60984" download="eager" />
-    <jar href="sellado.jar" size="58580" download="eager" />
+    <jar href="sellado.jar" size="58796" download="eager" />
   </resources>
   <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="sellado" >
     <param name="requiredFXVersion" value="8.0+"/>
