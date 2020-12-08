@@ -240,7 +240,7 @@ public class Query {
     public static ResultSet getRfidSalidaByPort(ConexionBaseDeDatosSellado conn, String port) {
         try {
             //si no retorna quiere decir que el puerto proviene de otra tabla rfid
-            String query = "select * from rfid_salida where ip=? limit 1";
+            String query = "select * from rfid_salida inner join calibrador on rfid_salida.fk_calibrador=calibrador.id where ip=? limit 1";
             PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             preparedStmt.setString(1, port);
@@ -420,16 +420,19 @@ public class Query {
         }
     }
 
-    public static ResultSet getAperturaCierreDeTurno(ConexionBaseDeDatosSellado conn) {
+    public static ResultSet getAperturaCierreDeTurno(ConexionBaseDeDatosSellado conn, ResultSet resultSetLector) {
         try {
-            String query = "select * from apertura_cierre_de_turno where fecha_cierre='' and hora_cierre='' limit 1";
-            PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
-                    ResultSet.CONCUR_UPDATABLE);
-            ResultSet resultSet = preparedStatement.executeQuery();
-            if (!isEmptyResultSet(resultSet, "Se obtuvo apertura/cierre de turno", "No se obtuvo apertura/cierre de turno")) {
-                return resultSet;
+            resultSetLector.beforeFirst();
+            while (resultSetLector.next()) {
+                String query = "select * from apertura_cierre_de_turno where fecha_cierre='' and hora_cierre='' and fk_calibrador=? limit 1";
+                PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                        ResultSet.CONCUR_UPDATABLE);
+                preparedStatement.setInt(1, resultSetLector.getInt("calibrador.id"));
+                ResultSet resultSet = preparedStatement.executeQuery();
+                if (!isEmptyResultSet(resultSet, "Se obtuvo apertura/cierre de turno", "No se obtuvo apertura/cierre de turno")) {
+                    return resultSet;
+                }
             }
-
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getAperturaCierreDeTurno SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
@@ -504,10 +507,8 @@ public class Query {
         try {
             //codigo = "20000709";
             if (conn.getConnection() != null) {
-                
-                
+
                 //System.out.println("codigooooo hackeado:"+codigo);
-                
                 String query = "select * from Danich_DatosCajas where Cod_Caja =" + codigo + "";
                 PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                         ResultSet.CONCUR_UPDATABLE);
@@ -613,8 +614,8 @@ public class Query {
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, Date.getDateString());
                 preparedStmt.setString(2, Date.getHourString());
-                System.out.println("long time:"+Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
-                long validacionTime=Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString());
+                System.out.println("long time:" + Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
+                long validacionTime = Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString());
                 preparedStmt.setLong(3, validacionTime);
                 preparedStmt.setBoolean(4, true);
                 preparedStmt.setBoolean(5, isBeforeTime);
@@ -872,6 +873,24 @@ public class Query {
             Query.insertRegistroProduccion("err", "No se pudo obtener registro RFID registro de colaborador", Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+    
+    public static ResultSet existCodigo(ConexionBaseDeDatosSellado conn, String codigo) {
+        try {
+            String query = "select * from registro_diario_caja_sellada where codigo_de_barra= ?";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            preparedStmt.setString(1, codigo);
+            ResultSet resultSet = preparedStmt.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se encontro registro diario caja sellada para codigo:" + codigo, "No se encontro registro diario caja sellada para codigo:" + codigo)) {
+                return resultSet;
+            }
+            return resultSet;
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRegistroDiarioCajaSellada SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
     }
 
 }

@@ -3,12 +3,13 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
+            <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/baseDeDatos/ConexionBaseDeDatosSellado.java</file>
             <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/sellado/Sellado.java</file>
             <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/PortComJSerial/PortCOM.java</file>
+            <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/PortComJSerial/TwoWaySerialComm.java</file>
             <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/sellado/Query.java</file>
             <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/ModbusTCPJamod/ModbusTCP.java</file>
             <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/src/Utils/HexToASCII.java</file>
-            <file>file:/C:/Users/crist/Documents/Danich/sellado-java/sellado/build.xml</file>
         </group>
     </open-files>
 </project-private>

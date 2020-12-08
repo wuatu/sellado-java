@@ -293,9 +293,14 @@ public class TwoWaySerialComm {
             //obtiene calibrador y lector a traves de lector
             ResultSet resultSetGetLectorByPort = Query.getLectorByPort(conn, port);
 
-            //insertar registro lector_en_linea
+            //insertar registro lector_en_linea observable de codigo en sistema
             if (resultSetGetLectorByPort != null) {
                 Query.insertLectorEnLinea(conn, resultSetGetLectorByPort, codigo, Date.getDateString(), Date.getHourString());
+            }
+
+            //verirfico que código leido no existe en base de datos para no agregar mas de un código
+            if (Query.existCodigo(conn, codigo) != null) {
+                return;
             }
 
             //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
@@ -310,10 +315,9 @@ public class TwoWaySerialComm {
                         //busca caja en base de datos sellado para obtener ponderación de caja
                         cajaUnitec.setCodigo_Envase("48");
                         CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
-                        
-                        
+
                         //obtener id de apertura_cierre_de_turno
-                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
+                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetLectorByPort);
                         if (resultSetAperturaCierreDeTurno != null) {
                             //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
                             Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, cajaUnitec, codigo);
@@ -340,7 +344,7 @@ public class TwoWaySerialComm {
                         //CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
 
                         //obtener id de apertura_cierre_de_turno
-                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
+                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetLectorByPort);
                         if (resultSetAperturaCierreDeTurno != null) {
                             //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
                             Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, null, null, codigo);
@@ -377,7 +381,7 @@ public class TwoWaySerialComm {
             ResultSet resultSetUsuario = Query.getUsuarioPorRFID(conn, codigo);
             if (resultSetUsuario != null) {
                 //obtener id de apertura_cierre_de_turno
-                ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
+                ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetRfidByPort);
                 if (resultSetAperturaCierreDeTurno != null) {
                     ResultSet resultSetUsuarioEnLineaPorFecha = Query.getUsuarioEnLineaPorFecha(conn, resultSetUsuario);
                     if (resultSetUsuarioEnLineaPorFecha != null) {
@@ -402,15 +406,20 @@ public class TwoWaySerialComm {
                 //Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
         } else if (tag == "RFID_SALIDA") {
-            //inserta codigo rfid en tabla rfidSalida_en_calibrador
-            Query.insertRfidSalidaEnCalibrador(conn, calibradorId, codigo, Date.getDateString(), Date.getHourString());
+
+            ResultSet resultSetGetRfidSalidaByPort = Query.getRfidSalidaByPort(conn, port);
+
+            if (resultSetGetRfidSalidaByPort != null) {
+                //inserta codigo rfid en tabla rfidSalida_en_calibrador
+                Query.insertRfidSalidaEnCalibrador(conn, calibradorId, codigo, Date.getDateString(), Date.getHourString());
+            }
 
             //consulta para saber a que colaborador le pertence el codigo rfid leido
             ResultSet resultSetUsuario = Query.getUsuarioPorRFID(conn, codigo);
             if (resultSetUsuario != null) {
 
                 //consulta para verificar que haya un turno iniciado
-                ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn);
+                ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetRfidSalidaByPort);
                 if (resultSetAperturaCierreDeTurno != null) {
 
                     //consulta para saber en que calibrador y línea esta actualmente el colaborador
