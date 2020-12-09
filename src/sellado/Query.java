@@ -427,7 +427,9 @@ public class Query {
                 String query = "select * from apertura_cierre_de_turno where fecha_cierre='' and hora_cierre='' and fk_calibrador=? limit 1";
                 PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                         ResultSet.CONCUR_UPDATABLE);
-                preparedStatement.setInt(1, resultSetLector.getInt("calibrador.id"));
+                int calibradorId = resultSetLector.getInt("calibrador.id");
+                preparedStatement.setInt(1,calibradorId);
+                System.out.println("id de calibrador:" + calibradorId);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (!isEmptyResultSet(resultSet, "Se obtuvo apertura/cierre de turno", "No se obtuvo apertura/cierre de turno")) {
                     return resultSet;
@@ -509,14 +511,13 @@ public class Query {
             if (conn.getConnection() != null) {
 
                 //System.out.println("codigooooo hackeado:"+codigo);
-
                 if (codigo == null) {
-                    Query.insertRegistroProduccion("warning", "Código leído es nulo" , Utils.Date.getDateString(), Utils.Date.getHourString());
+                    Query.insertRegistroProduccion("warning", "Código leído es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
                     Query.insertRegistroDev("warning", "Código leído es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
                     return null;
                 }
                 if (codigo.equalsIgnoreCase("")) {
-                    Query.insertRegistroProduccion("warning", "Código leído es vacío" , Utils.Date.getDateString(), Utils.Date.getHourString());
+                    Query.insertRegistroProduccion("warning", "Código leído es vacío", Utils.Date.getDateString(), Utils.Date.getHourString());
                     Query.insertRegistroDev("warning", "Código leído es vacío", Utils.Date.getDateString(), Utils.Date.getHourString());
                     return null;
                 }
@@ -877,7 +878,7 @@ public class Query {
 
             String query = " insert into registro_rfid (codigo)"
                     + " values (?)";
-            System.out.println("codigo:"+codigo);
+            System.out.println("codigo:" + codigo);
             PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
             preparedStmt.setString(1, codigo);
             preparedStmt.execute();
@@ -887,7 +888,7 @@ public class Query {
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
     public static ResultSet existCodigo(ConexionBaseDeDatosSellado conn, String codigo) {
         try {
             String query = "select * from registro_diario_caja_sellada where codigo_de_barra= ?";
@@ -898,7 +899,6 @@ public class Query {
             if (!isEmptyResultSet(resultSet, "Se encontro registro diario caja sellada para codigo:" + codigo, "No se encontro registro diario caja sellada para codigo:" + codigo)) {
                 return resultSet;
             }
-            return resultSet;
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRegistroDiarioCajaSellada SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
