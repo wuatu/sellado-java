@@ -247,9 +247,10 @@ public class Sellado extends Application {
                         timeout);
                 portCOMArray.add(portCOM);
 
+                /*
                 if (portCOM.twoWaySerialComm.connUnitec.error != null) {
                     this.textArea.setText(this.textArea.getText() + "\n" + portCOM.twoWaySerialComm.connUnitec.error + " RFID, puerto: " + port);
-                }
+                }*/
                 llenarLog();
             }
         } catch (SQLException ex) {
@@ -287,9 +288,10 @@ public class Sellado extends Application {
                         PortCOMSettings.dataBits(dataBits),
                         timeout);
                 portCOMArray.add(portCOM);
+                /*
                 if (portCOM.twoWaySerialComm.connUnitec.error != null) {
                     this.textArea.setText(this.textArea.getText() + "\n" + portCOM.twoWaySerialComm.connUnitec.error + " Lector, puerto: " + port);
-                }
+                }*/
                 llenarLog();
             }
         } catch (SQLException ex) {
@@ -324,9 +326,10 @@ public class Sellado extends Application {
                         PortCOMSettings.dataBits(dataBits),
                         timeout);
                 portCOMArray.add(portCOM);
+                /*
                 if (portCOM.twoWaySerialComm.connUnitec.error != null) {
                     this.textArea.setText(this.textArea.getText() + "\n" + portCOM.twoWaySerialComm.connUnitec.error + " RFID Salida, puerto: " + port);
-                }
+                }*/
                 llenarLog();
 
             }
@@ -361,9 +364,10 @@ public class Sellado extends Application {
                         PortCOMSettings.dataBits(dataBits),
                         timeout);
                 portCOMArray.add(portCOM);
+                /*
                 if (portCOM.twoWaySerialComm.connUnitec.error != null) {
                     this.textArea.setText(this.textArea.getText() + "\n" + portCOM.twoWaySerialComm.connUnitec.error + " RFID Salida, puerto: " + port);
-                }
+                }*/
                 llenarLog();
 
             }

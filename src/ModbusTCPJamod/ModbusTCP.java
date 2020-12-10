@@ -121,13 +121,13 @@ public class ModbusTCP {
                                 trans.setRequest(req);
                                 try {
                                     trans.execute();
+                                    res = (ReadMultipleRegistersResponse) trans.getResponse();
                                 } catch (ModbusSlaveException ex) {
                                     Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusSlaveException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                                 } catch (ModbusException ex) {
                                     Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
-                                }
-                                res = (ReadMultipleRegistersResponse) trans.getResponse();
-                                res = (ReadMultipleRegistersResponse) trans.getResponse();
+                                }              
+                                
                                 String hex = "";
                                 for (int i = 0; i < res.getRegisters().length; i++) {
                                     hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));

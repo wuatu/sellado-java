@@ -896,7 +896,7 @@ public class Query {
                     ResultSet.CONCUR_UPDATABLE);
             preparedStmt.setString(1, codigo);
             ResultSet resultSet = preparedStmt.executeQuery();
-            if (!isEmptyResultSet(resultSet, "Se encontro registro diario caja sellada para codigo:" + codigo, "No se encontro registro diario caja sellada para codigo:" + codigo)) {
+            if (!isEmptyResultSet(resultSet, "Código pistoleado mas de una vez:" + codigo, "código pistoleado una vez:" + codigo)) {
                 return resultSet;
             }
         } catch (SQLException ex) {

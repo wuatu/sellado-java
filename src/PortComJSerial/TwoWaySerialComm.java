@@ -67,8 +67,6 @@ public class TwoWaySerialComm {
     public ArrayList<String> erroresString = new ArrayList<>();
     public CommPort commPort;
     //public Thread thread;
-    public ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
-    public ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
 
     public TwoWaySerialComm() {
         super();
@@ -292,6 +290,7 @@ public class TwoWaySerialComm {
             System.out.println("contador de lector: " + count);
 
             //obtiene calibrador y lector a traves de lector
+            ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
             ResultSet resultSetGetLectorByPort = Query.getLectorByPort(conn, port);
 
             //insertar registro lector_en_linea observable de codigo en sistema
@@ -304,9 +303,17 @@ public class TwoWaySerialComm {
                 return;
             }
 
+            ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
             //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
             System.out.println("conn unitecccccccc" + connUnitec.getConnection());
             CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(connUnitec, codigo);
+            try {
+                connUnitec.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            connUnitec.disconnection();
+            connUnitec = null;
 
             if (cajaUnitec != null) {
                 if (resultSetGetLectorByPort != null) {
@@ -362,12 +369,15 @@ public class TwoWaySerialComm {
                     Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
                 }
             }
-            /*
-                                conn.getConnection().close();
-                                conn.disconnection();
-                                conn = null;
-             */
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
         } else if (tag == "RFID") {
+            ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
             //ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
 
             //obtiene calibrador y lector a traves de lector
@@ -406,8 +416,15 @@ public class TwoWaySerialComm {
                 System.out.println("resultSetUsuario es nulo");
                 //Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
         } else if (tag == "RFID_SALIDA") {
-
+            ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
             ResultSet resultSetGetRfidSalidaByPort = Query.getRfidSalidaByPort(conn, port);
 
             if (resultSetGetRfidSalidaByPort != null) {
@@ -440,10 +457,24 @@ public class TwoWaySerialComm {
                 System.out.println("resultSetUsuario es nulo");
                 Query.insertRegistroProduccion("err", "Usuario es nulo", Utils.Date.getDateString(), Utils.Date.getHourString());
             }
-
-        } else if (tag.equals("RFID_REGISTRO_COLABORADOR") ) {
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
+        } else if (tag.equals("RFID_REGISTRO_COLABORADOR")) {
+            ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
             //inserta codigo rfid en tabla rfidSalida_en_calibrador
             Query.insertRegistroRfid(conn, codigo, Date.getDateString(), Date.getHourString());
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex1) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+            }
+            conn.disconnection();
+            conn = null;
         }
     }
 
