@@ -21,6 +21,7 @@ import net.wimpi.modbus.ModbusSlaveException;
 import net.wimpi.modbus.io.ModbusTCPTransaction;
 import net.wimpi.modbus.msg.ReadMultipleRegistersRequest;
 import net.wimpi.modbus.msg.ReadMultipleRegistersResponse;
+import net.wimpi.modbus.net.ModbusTCPListener;
 import net.wimpi.modbus.net.TCPMasterConnection;
 import sellado.Query;
 
@@ -30,7 +31,6 @@ import sellado.Query;
  */
 public class ModbusTCP {
 
-    ModbusTCPTransaction trans = null;
     TCPMasterConnection tcpMasterConnection = null; //the connection
     public Thread thread = null;
     public String error = null;
@@ -62,6 +62,10 @@ public class ModbusTCP {
             tcpMasterConnection.setPort(port);
             tcpMasterConnection.connect();
 
+            //ModbusTCPListener listener = new ModbusTCPListener(3);
+            //listener.setPort(port);
+            //listener.
+            //listener.start();
             if (tcpMasterConnection.isConnected()) {
                 System.out.println("Sensor validador conectado");
             } else {
@@ -79,12 +83,17 @@ public class ModbusTCP {
                     do {
                         // obtiene cantidad de registros a leer 
                         ReadMultipleRegistersRequest cantidadDeRegistrosALeerRequest = new ReadMultipleRegistersRequest(totalDeRegistrosALeer, 1); // obtiene cantidad de registros a leer 7004
-                        trans = new ModbusTCPTransaction(tcpMasterConnection);
+                        ModbusTCPTransaction trans = new ModbusTCPTransaction(tcpMasterConnection);
                         trans.setRequest(cantidadDeRegistrosALeerRequest);
                         try {
                             trans.execute();
+                        } catch (ModbusSlaveException ex) {
+                            Logger.getLogger(ModbusTCP.class.getName()).log(Level.SEVERE, null, ex);
+                            System.out.println("Error ModbusSlaveException: " + ex);
                         } catch (ModbusException ex) {
-                            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+                            Logger.getLogger(ModbusTCP.class.getName()).log(Level.SEVERE, null, ex);
+                            System.out.println("Error ModbusException: " + ex);
+                            /*Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                             System.out.println("Alerta 6");
                             Alert alert = new Alert(Alert.AlertType.ERROR);
                             alert.setTitle("Alerta 6");
@@ -92,7 +101,9 @@ public class ModbusTCP {
                             alert.setContentText("Sensor desconectado: " + ex.getMessage());
                             alert.showAndWait();
                             System.exit(1);
+                             */
                         }
+
                         ReadMultipleRegistersResponse res = (ReadMultipleRegistersResponse) trans.getResponse();
                         cantidadDeRegistrosALeer = res.getRegisters()[0].getValue();
 
@@ -126,13 +137,18 @@ public class ModbusTCP {
                                     Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusSlaveException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                                 } catch (ModbusException ex) {
                                     Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
-                                }              
-                                
+                                }
+
                                 String hex = "";
                                 for (int i = 0; i < res.getRegisters().length; i++) {
                                     hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));
                                     //System.out.println(res.getRegisters()[i].getValue());
                                 }
+                                
+                                if(!hex.equalsIgnoreCase("")){
+                                    System.out.println("codigo vaciooooooooooooooooooooooooooooooooooooooooooooooo");
+                                }
+                                
                                 String codigo = Utils.HexToASCII.convertHexToASCII(hex);
                                 codigo = Utils.HexToASCII.limpiarString(codigo);
 
@@ -167,7 +183,7 @@ public class ModbusTCP {
     // obtiene cantidad de registros a leer     
     public int obtieneRegistros(int ref, int count) {
         ReadMultipleRegistersRequest cantidadDeRegistrosALeerRequest = new ReadMultipleRegistersRequest(ref, count); // obtiene cantidad de registros a leer                    
-        trans = new ModbusTCPTransaction(tcpMasterConnection);
+        ModbusTCPTransaction trans = new ModbusTCPTransaction(tcpMasterConnection);
         trans.setRequest(cantidadDeRegistrosALeerRequest);
         try {
             trans.execute();

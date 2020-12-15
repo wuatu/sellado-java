@@ -305,7 +305,6 @@ public class TwoWaySerialComm {
 
             ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
             //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
-            System.out.println("conn unitecccccccc" + connUnitec.getConnection());
             CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(connUnitec, codigo);
             try {
                 connUnitec.getConnection().close();
@@ -321,7 +320,7 @@ public class TwoWaySerialComm {
                     ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
                     if (resultSetUsuariosEnLinea != null) {
                         //busca caja en base de datos sellado para obtener ponderación de caja
-                        cajaUnitec.setCodigo_Envase("48");
+                        //cajaUnitec.setCodigo_Envase("48");
                         CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
 
                         //obtener id de apertura_cierre_de_turno
@@ -535,7 +534,6 @@ public class TwoWaySerialComm {
         //Query a = new Query();
         //codigo = "20000709";
         CajaUnitec caja = Query.getCajaPorCodigoUnitec(connUnitec, codigo);
-        System.out.println("cajaaaaaaaaaaaaaaaaaaaa" + caja);
         return caja;
     }
 }
