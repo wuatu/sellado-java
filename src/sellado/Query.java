@@ -506,9 +506,10 @@ public class Query {
     public static CajaSellado getCajaPorCodigoSellado(ConexionBaseDeDatosSellado conn, String codigoEnvaseUnitec, String categoriaUnitec, String calibreUnitec) {
         try {
             System.out.println("*** Obtiene caja por codigo de sellado ***");
-            String query = "select * from caja where codigo_envase = " + codigoEnvaseUnitec + " limit 1";
+            String query = "select * from caja where codigo_envase = ? limit 1";
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
+            preparedStatement.setString(1, codigoEnvaseUnitec);
             ResultSet resultSet = preparedStatement.executeQuery();
             if (!isEmptyResultSet(resultSet, "Se encotró envase de caja por codigo:" + codigoEnvaseUnitec, "No se encotró envase de caja por codigo:" + codigoEnvaseUnitec)) {
                 resultSet.beforeFirst();
@@ -950,12 +951,16 @@ public class Query {
             while (resultSetRegistroDiarioCajaSellada.next()) {
                 String query = " insert into caja (codigo_envase, envase, descripcion)"
                         + " values (?, ?, ?)";
-                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
-                preparedStmt.setString(1, resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec"));
-                preparedStmt.setString(2, resultSetRegistroDiarioCajaSellada.getString("Envase_Unitec"));
-                preparedStmt.setString(3, "Envase: " + resultSetRegistroDiarioCajaSellada.getString("Envase_Unitec") + ", Codigo confección: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Confection_Unitec") + ", Confección: " + resultSetRegistroDiarioCajaSellada.getString("Confection_Unitec") + ", Código embalaje: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Embalaje_Unitec") + ", Embalaje: " + resultSetRegistroDiarioCajaSellada.getString("Embalaje_Unitec"));
-                preparedStmt.execute();
-                Query.insertRegistroProduccion("ok", "Nueva caja de sellado insertado correctamente: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec"), Utils.Date.getDateString(), Utils.Date.getHourString());
+                if (resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec") != null) {
+                    if (!resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec").equalsIgnoreCase("")) {
+                        PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                        preparedStmt.setString(1, resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec"));
+                        preparedStmt.setString(2, resultSetRegistroDiarioCajaSellada.getString("Envase_Unitec"));
+                        preparedStmt.setString(3, "Envase: " + resultSetRegistroDiarioCajaSellada.getString("Envase_Unitec") + ", Codigo confección: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Confection_Unitec") + ", Confección: " + resultSetRegistroDiarioCajaSellada.getString("Confection_Unitec") + ", Código embalaje: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Embalaje_Unitec") + ", Embalaje: " + resultSetRegistroDiarioCajaSellada.getString("Embalaje_Unitec"));
+                        preparedStmt.execute();
+                        Query.insertRegistroProduccion("ok", "Nueva caja de sellado insertado correctamente: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec"), Utils.Date.getDateString(), Utils.Date.getHourString());
+                    }
+                }
             }
         } catch (SQLException ex) {
             Query.insertRegistroProduccion("warn", "No se pudo insertar nueva caja de sellado", Utils.Date.getDateString(), Utils.Date.getHourString());
