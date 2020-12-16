@@ -144,23 +144,22 @@ public class ModbusTCP {
                                     hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));
                                     //System.out.println(res.getRegisters()[i].getValue());
                                 }
-                                
-                                if(!hex.equalsIgnoreCase("")){
-                                    System.out.println("codigo vaciooooooooooooooooooooooooooooooooooooooooooooooo");
+
+                                if (!hex.equalsIgnoreCase("")) {
+                                    String codigo = Utils.HexToASCII.convertHexToASCII(hex);
+                                    codigo = Utils.HexToASCII.limpiarString(codigo);
+
+                                    //System.out.println("****** CODIGO LEIDO ******");
+                                    System.out.println("Código lector validador: " + codigo);
+
+                                    //inserta codigo en tabla lectorValidadpr_en_calibrador
+                                    Query.insertLectorValidadorEnCalibrador(calibradorId, codigo, Date.getDateString(), Date.getHourString());
+
+                                    //Verificar a traves de lector verificador, updatear valores is_verificado, is_before_time tabla registro_diario_caja_sellada
+                                    Query.updateRegistroDiarioCajaCerradaCodigo(codigo, waitingTime);
+                                } else {
+                                    System.out.println("Lectura no valida o vacía");
                                 }
-                                
-                                String codigo = Utils.HexToASCII.convertHexToASCII(hex);
-                                codigo = Utils.HexToASCII.limpiarString(codigo);
-
-                                //System.out.println("****** CODIGO LEIDO ******");
-                                System.out.println("Código lector validador: " + codigo);
-
-                                //inserta codigo en tabla lectorValidadpr_en_calibrador
-                                Query.insertLectorValidadorEnCalibrador(calibradorId, codigo, Date.getDateString(), Date.getHourString());
-
-                                //Verificar a traves de lector verificador, updatear valores is_verificado, is_before_time tabla registro_diario_caja_sellada
-                                Query.updateRegistroDiarioCajaCerradaCodigo(codigo, waitingTime);
-
                             }
 
                         }
