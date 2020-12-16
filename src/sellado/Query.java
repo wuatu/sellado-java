@@ -398,6 +398,11 @@ public class Query {
                         preparedStmt.setString(33, "");
                         preparedStmt.setLong(34, -1);
                         preparedStmt.setInt(35, crearRegistroDiarioCajaSellada.getInt("id"));
+                        preparedStmt.execute();
+
+                        query = " select * from registro_diario_caja_sellada ORDER BY id DESC LIMIT 1";
+                        preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                                ResultSet.CONCUR_UPDATABLE);
                         ResultSet resultSet = preparedStmt.executeQuery();
 
                         if (cajaSellado != null) {

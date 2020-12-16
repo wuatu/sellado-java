@@ -115,7 +115,6 @@ public class Sellado extends Application {
 
             //obtener lector validador        
             ResultSet resultSetLectorValidador = Query.getLectorValidador(conn);
-
             if (resultSetLectorValidador != null) {
                 try {
                     resultSetLectorValidador.beforeFirst();
@@ -134,6 +133,49 @@ public class Sellado extends Application {
                 conn.disconnection();
                 conn = null;
             }
+            
+            //obtener RFID de tabla "rfid_registro_colaborador"
+            conn = new ConexionBaseDeDatosSellado();
+            ResultSet resultSetRfidRegistroColaborador = Query.getRfidRegistroColaborador(conn);
+
+            if (resultSetRfidRegistroColaborador != null) {
+                try {
+                    resultSetRfidRegistroColaborador.beforeFirst();
+                } catch (SQLException ex) {
+                    Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                textArea.setText(textArea.getText() + "\n" + "- Iniciando RFID de registro de colaboradores...");
+                //crear hilo por cada rfid
+                crearThreadRfidRegistroColaborador(resultSetRfidRegistroColaborador);
+                try {
+                    conn.getConnection().close();
+                } catch (SQLException ex1) {
+                    Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                conn.disconnection();
+                conn = null;
+            }
+            
+            //obtener RFID de tabla "rfid_salida"
+            conn = new ConexionBaseDeDatosSellado();
+            ResultSet resultSetRfidSalida = Query.getRfidSalidaJoinCalibrador(conn);
+            if (resultSetRfidSalida != null) {
+                try {
+                    resultSetRfidSalida.beforeFirst();
+                } catch (SQLException ex) {
+                    Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+                }
+                textArea.setText(textArea.getText() + "\n" + "- Iniciando RFID salida calibrador...");
+                //crear hilo por cada rfid
+                crearThreadPorCadaRfidSalida(resultSetRfidSalida);
+                try {
+                    conn.getConnection().close();
+                } catch (SQLException ex1) {
+                    Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                conn.disconnection();
+                conn = null;
+            } 
 
             //obtener lectores en linea de tabla "linea" 
             conn = new ConexionBaseDeDatosSellado();
@@ -166,50 +208,7 @@ public class Sellado extends Application {
                 }
                 conn.disconnection();
                 conn = null;
-            }
-
-            //obtener RFID de tabla "rfid_salida"
-            conn = new ConexionBaseDeDatosSellado();
-            ResultSet resultSetRfidSalida = Query.getRfidSalidaJoinCalibrador(conn);
-            if (resultSetRfidSalida != null) {
-                try {
-                    resultSetRfidSalida.beforeFirst();
-                } catch (SQLException ex) {
-                    Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                textArea.setText(textArea.getText() + "\n" + "- Iniciando RFID salida calibrador...");
-                //crear hilo por cada rfid
-                crearThreadPorCadaRfidSalida(resultSetRfidSalida);
-                try {
-                    conn.getConnection().close();
-                } catch (SQLException ex1) {
-                    Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-                }
-                conn.disconnection();
-                conn = null;
-            }
-
-            //obtener RFID de tabla "rfid_registro_colaborador"
-            conn = new ConexionBaseDeDatosSellado();
-            ResultSet resultSetRfidRegistroColaborador = Query.getRfidRegistroColaborador(conn);
-
-            if (resultSetRfidRegistroColaborador != null) {
-                try {
-                    resultSetRfidRegistroColaborador.beforeFirst();
-                } catch (SQLException ex) {
-                    Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                textArea.setText(textArea.getText() + "\n" + "- Iniciando RFID de registro de colaboradores...");
-                //crear hilo por cada rfid
-                crearThreadRfidRegistroColaborador(resultSetRfidRegistroColaborador);
-                try {
-                    conn.getConnection().close();
-                } catch (SQLException ex1) {
-                    Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-                }
-                conn.disconnection();
-                conn = null;
-            }
+            }                       
 
             System.out.println("Configuracion inicial realizada satisfactoriamente");
             textArea.setText(textArea.getText() + "\n");
