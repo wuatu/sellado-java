@@ -265,7 +265,6 @@ public class TwoWaySerialComm {
                 ejecutarAccionLectorRFID(codigo, tag, port, calibradorId, lineaId);
             } catch (IOException e) {
                 e.printStackTrace();
-                System.exit(-1);
             }
         }
 

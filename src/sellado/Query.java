@@ -399,6 +399,118 @@ public class Query {
                         preparedStmt.setLong(34, -1);
                         preparedStmt.setInt(35, crearRegistroDiarioCajaSellada.getInt("id"));
                         preparedStmt.execute();
+                        
+                        
+                        //insertar en registro diario caja sellada aux que mantiene los registros diarios en tabla temporal
+                        //que se eliminan al finalizar el turno
+                        query = " insert into registro_diario_caja_sellada_aux (id_calibrador, "
+                                + "nombre_calibrador, "
+                                + "id_linea, "
+                                + "nombre_linea, "
+                                + "id_rfid,"
+                                + "nombre_rfid,"
+                                + "ip_rfid,"
+                                + "id_lector,"
+                                + "nombre_lector,"
+                                + "ip_lector,"
+                                + "id_usuario,"
+                                + "rut_usuario,"
+                                + "nombre_usuario,"
+                                + "apellido_usuario,"
+                                + "codigo_de_barra,"
+                                + "Cod_Caja_Unitec,"
+                                + "Codigo_Confection_Unitec,"
+                                + "Confection_Unitec,"
+                                + "Codigo_Embalaje_Unitec,"
+                                + "Embalaje_Unitec,"
+                                + "Codigo_Envase_Unitec,"
+                                + "Envase_Unitec,"
+                                + "Categoria_Unitec,"
+                                + "Categoria_Timbrada_Unitec,"
+                                + "Codigo_Calibre_Unitec,"
+                                + "Calibre_Unitec,"
+                                + "id_caja_sellada,"
+                                + "ponderacion_caja_sellada,"
+                                + "fecha_sellado,"
+                                + "hora_sellado,"
+                                + "fecha_sellado_time,"
+                                + "fecha_validacion,"
+                                + "hora_validacion,"
+                                + "fecha_validacion_time,"
+                                + "id_apertura_cierre_de_turno)"
+                                + " values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?,?,?,?,?,?,?)";
+                        // create the mysql insert preparedstatement
+                        preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                                ResultSet.CONCUR_UPDATABLE);
+                        preparedStmt.setInt(1, resultSetUsuariosEnLinea.getInt("id_calibrador"));
+                        preparedStmt.setString(2, resultSetUsuariosEnLinea.getString("nombre_calibrador"));
+                        preparedStmt.setInt(3, resultSetUsuariosEnLinea.getInt("id_linea"));
+                        preparedStmt.setString(4, resultSetUsuariosEnLinea.getString("nombre_linea"));
+                        preparedStmt.setInt(5, resultSetUsuariosEnLinea.getInt("id_rfid"));
+                        preparedStmt.setString(6, resultSetUsuariosEnLinea.getString("nombre_rfid"));
+                        preparedStmt.setString(7, resultSetUsuariosEnLinea.getString("ip_rfid"));
+                        preparedStmt.setInt(8, resultSetGetLectorByPort.getInt("id"));
+                        preparedStmt.setString(9, resultSetGetLectorByPort.getString("nombre"));
+                        preparedStmt.setString(10, resultSetGetLectorByPort.getString("ip"));
+                        preparedStmt.setInt(11, resultSetUsuariosEnLinea.getInt("id_usuario"));
+                        preparedStmt.setString(12, resultSetUsuariosEnLinea.getString("usuario_rut"));
+                        preparedStmt.setString(13, resultSetUsuariosEnLinea.getString("nombre_usuario"));
+                        preparedStmt.setString(14, resultSetUsuariosEnLinea.getString("apellido_usuario"));
+                        preparedStmt.setString(15, codigo);
+
+                        isInsertedCajaUnitec = false;
+                        if (cajaUnitec != null) {
+                            System.out.println("caja unitec No nula");
+                            if (!cajaUnitec.getCodigo_Envase().equalsIgnoreCase("")) {
+                                isInsertedCajaUnitec = true;
+                                System.out.println("caja unitec getCodigo_Envase vacío");
+                                preparedStmt.setString(16, cajaUnitec.getCod_Caja());
+                                preparedStmt.setString(17, cajaUnitec.getCodigo_Confection());
+                                preparedStmt.setString(18, cajaUnitec.getConfection());
+                                preparedStmt.setString(19, cajaUnitec.getCodigo_Embalaje());
+                                preparedStmt.setString(20, cajaUnitec.getEmbalaje());
+                                preparedStmt.setString(21, cajaUnitec.getCodigo_Envase());
+                                preparedStmt.setString(22, cajaUnitec.getEnvase());
+                                preparedStmt.setString(23, cajaUnitec.getCategoria());
+                                preparedStmt.setString(24, cajaUnitec.getCategoria_Timbrada());
+                                preparedStmt.setString(25, cajaUnitec.getCodigo_Calibre());
+                                preparedStmt.setString(26, cajaUnitec.getCalibre());
+                            }
+                        }
+                        if (isInsertedCajaUnitec == false) {
+                            System.out.println("caja unitec Nula o getCodigo_Envase vacío");
+                            preparedStmt.setString(16, null);
+                            preparedStmt.setString(17, null);
+                            preparedStmt.setString(18, null);
+                            preparedStmt.setString(19, null);
+                            preparedStmt.setString(20, null);
+                            preparedStmt.setString(21, null);
+                            preparedStmt.setString(22, null);
+                            preparedStmt.setString(23, null);
+                            preparedStmt.setString(24, null);
+                            preparedStmt.setString(25, null);
+                            preparedStmt.setString(26, null);
+                        }
+
+                        if (cajaSellado != null) {
+                            System.out.println("caja sellado No nula");
+                            preparedStmt.setInt(27, cajaSellado.getId());
+                            preparedStmt.setInt(28, cajaSellado.getPonderacion());
+                        } else {
+                            System.out.println("caja selldo Nula");
+                            preparedStmt.setInt(27, -1);
+                            preparedStmt.setInt(28, -1);
+                        }
+
+                        preparedStmt.setString(29, Date.getDateString());
+                        preparedStmt.setString(30, Date.getHourString());
+                        preparedStmt.setLong(31, Date.getDateParseStringToLongTime(Date.getDateString(), Date.getHourString()));
+                        preparedStmt.setString(32, "");
+                        preparedStmt.setString(33, "");
+                        preparedStmt.setLong(34, -1);
+                        preparedStmt.setInt(35, crearRegistroDiarioCajaSellada.getInt("id"));
+                        preparedStmt.execute();
+                        
 
                         query = " select * from registro_diario_caja_sellada ORDER BY id DESC LIMIT 1";
                         preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
