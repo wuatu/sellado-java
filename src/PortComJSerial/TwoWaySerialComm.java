@@ -502,7 +502,6 @@ public class TwoWaySerialComm {
                 }
             } catch (IOException e) {
                 e.printStackTrace();
-                System.exit(-1);
             }
         }
     }
