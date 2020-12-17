@@ -548,10 +548,11 @@ public class Query {
                     Query.insertRegistroDev("warning", "Código leído es vacío", Utils.Date.getDateString(), Utils.Date.getHourString());
                     return null;
                 }
-                String query = "select * from Danich_DatosCajas where Cod_Caja = " + codigo + "";
+                String query = "select * from Danich_DatosCajas where Cod_Caja = ? ";
 
                 PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                         ResultSet.CONCUR_UPDATABLE);
+                preparedStatement.setString(1, codigo);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (!isEmptyResultSet(resultSet, "Se encotró caja por codigo:" + codigo, "No se encotró caja por codigo:" + codigo)) {
                     resultSet.beforeFirst();
@@ -628,8 +629,12 @@ public class Query {
 
     public static void updateRegistroDiarioCajaCerradaCodigo(String codigo, int waitingTime) {
         ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+        
         ResultSet resultSet = getRegistroDiarioCajaSellada(conn, codigo);
         try {
+            if (resultSet == null) {
+                return;
+            }
             System.out.println("*** Actualiza registro diario caja sellada ***");
             String horaSellado = null;
             String fechaSellado = null;

@@ -278,6 +278,13 @@ public class TwoWaySerialComm {
     public void ejecutarAccionLectorRFID(String cod, String tag, String port, String calibradorId, String lineaId) {
 
         String codigo = Utils.HexToASCII.limpiarString(cod);
+
+        if (codigo != null) {
+            if (codigo.length() <= 0 || codigo.length() >= 20) {
+                return;
+            }
+        }
+
         System.out.println("codigo length:" + codigo.length());
         for (int i = 0; i < codigo.length(); i++) {
             System.out.println("codigo: " + codigo.charAt(i));

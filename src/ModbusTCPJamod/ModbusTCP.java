@@ -148,7 +148,7 @@ public class ModbusTCP {
                                 if (!hex.equalsIgnoreCase("")) {
                                     String codigo = Utils.HexToASCII.convertHexToASCII(hex);
                                     codigo = Utils.HexToASCII.limpiarString(codigo);
-
+                                    System.out.println("*** Lector validador ***");
                                     //System.out.println("****** CODIGO LEIDO ******");
                                     System.out.println("Código lector validador: " + codigo);
 
