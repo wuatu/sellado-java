@@ -34,6 +34,7 @@ public class ModbusTCP {
     TCPMasterConnection tcpMasterConnection = null; //the connection
     public Thread thread = null;
     public String error = null;
+    int count = 0;
 
     public ModbusTCP(String nombre, String ip, int waitingTime, int inicioDireccionDeMemoriaLectura, int calibradorId) {
         try {
@@ -54,8 +55,7 @@ public class ModbusTCP {
 
             addr = InetAddress.getByName(ip);
 
-            System.out.println("asdsadasda" + addr);
-
+            //System.out.println("asdsadasda" + addr);
             //2. Open the connection            
             tcpMasterConnection = new TCPMasterConnection(addr);
             tcpMasterConnection.setTimeout(500);
@@ -126,6 +126,10 @@ public class ModbusTCP {
                         //System.out.println("Reading...");
                         if (numeroLecturaNuevo != numeroLecturaAnterior && isLeido == true) {
                             //obtiene codigo leido
+                            System.out.println("");
+                            System.out.println("*** Lector validador ***");
+                            count++;
+                            System.out.println("Contador de lecturas sensor validador: " + count);
                             numeroLecturaAnterior = numeroLecturaNuevo;
                             if (secondCodeReader == 1) {
                                 ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(codigoRegistroInicial, cantidadDeRegistrosALeer); //desde donde comienza el registro del codigo 7005
@@ -147,8 +151,7 @@ public class ModbusTCP {
 
                                 if (!hex.equalsIgnoreCase("")) {
                                     String codigo = Utils.HexToASCII.convertHexToASCII(hex);
-                                    codigo = Utils.HexToASCII.limpiarString(codigo);
-                                    System.out.println("*** Lector validador ***");
+                                    codigo = Utils.HexToASCII.limpiarString(codigo);                       
                                     //System.out.println("****** CODIGO LEIDO ******");
                                     System.out.println("Código lector validador: " + codigo);
 

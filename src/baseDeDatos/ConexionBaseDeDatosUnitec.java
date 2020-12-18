@@ -41,7 +41,7 @@ public class ConexionBaseDeDatosUnitec {
                 //obtiene la conexion
                 conn = DriverManager.getConnection(conexionUrl);
                 if (conn != null) {
-                    System.out.println("Conexion a base de datos UNITEC establecida");
+                    //System.out.println("Conexion a base de datos UNITEC establecida");
                     break;
                 } else{
                     System.out.println("erooooooooooooooooooooooooooooooooooooooooooooooooor");
@@ -68,7 +68,7 @@ public class ConexionBaseDeDatosUnitec {
     public void disconnection() {
         conn = null;
         if (conn == null) {
-            System.out.println("Conexion a base de datos UNITEC terminada");
+            //System.out.println("Conexion a base de datos UNITEC terminada");
         }
     }
 }

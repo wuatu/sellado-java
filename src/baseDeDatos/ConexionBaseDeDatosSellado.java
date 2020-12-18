@@ -37,7 +37,7 @@ public class ConexionBaseDeDatosSellado {
                     //obtiene la conexion
                     conn = DriverManager.getConnection(url, usuario, password);
                     if (conn != null) {
-                        System.out.println("Conexion a base de datos 'Sellado' establecida");
+                        //System.out.println("Conexion a base de datos 'Sellado' establecida");
                         break;
                     }
                 } catch (SQLException ex) {
@@ -59,7 +59,7 @@ public class ConexionBaseDeDatosSellado {
     public void disconnection() {
         conn = null;
         if (conn == null) {
-            System.out.println("Conexion a base de datos 'Sellado' terminada");
+            //System.out.println("Conexion a base de datos 'Sellado' terminada");
         }
     }
 

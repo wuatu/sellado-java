@@ -284,15 +284,20 @@ public class TwoWaySerialComm {
             }
         }
 
+        /*
         System.out.println("codigo length:" + codigo.length());
         for (int i = 0; i < codigo.length(); i++) {
             System.out.println("codigo: " + codigo.charAt(i));
         }
+        */
 
-        System.out.println("Código: " + codigo);
+        
 
         if (tag == "LECTOR") {
             count++;
+            System.out.println("");
+            System.out.println("*** Lector en línea ***");
+            System.out.println("Código: " + codigo);
             System.out.println("contador de lector: " + count);
 
             //obtiene calibrador y lector a traves de lector
@@ -335,15 +340,12 @@ public class TwoWaySerialComm {
                             //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
                             Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, cajaUnitec, codigo);
                         } else {
-                            System.out.println("resultSetAperturaCierreDeTurno es nulo");
                             Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                     } else {
-                        System.out.println("No se pudo obtener usuarios en línea");
                         Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
                     }
                 } else {
-                    System.out.println("No se pudo obtener lector por puerto");
                     Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
                 }
             } else {
