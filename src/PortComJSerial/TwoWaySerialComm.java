@@ -227,6 +227,7 @@ public class TwoWaySerialComm {
         String calibradorId = "";
         String lineaId = "";
 
+        //constructor de RFID y lector
         public SerialReader(InputStream in, String tag, String port, String calibradorId, String lineaId) {
             this.in = in;
             this.tag = tag;
@@ -278,111 +279,126 @@ public class TwoWaySerialComm {
 
         String codigo = Utils.HexToASCII.limpiarString(cod);
 
-        if (codigo != null) {
-            if (codigo.length() <= 0 || codigo.length() >= 20) {
-                return;
-            }
+        if (codigo == null) {
+            return;
         }
 
-        /*
-        System.out.println("codigo length:" + codigo.length());
-        for (int i = 0; i < codigo.length(); i++) {
-            System.out.println("codigo: " + codigo.charAt(i));
+        if (codigo.length() <= 0) {
+            return;
         }
-        */
 
-        
+        System.out.println("Código: " + codigo);
 
         if (tag == "LECTOR") {
-            count++;
-            System.out.println("");
-            System.out.println("*** Lector en línea ***");
-            System.out.println("Código: " + codigo);
-            System.out.println("contador de lector: " + count);
 
-            //obtiene calibrador y lector a traves de lector
-            ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
-            ResultSet resultSetGetLectorByPort = Query.getLectorByPort(conn, port);
+            List<String> codigoList = splitEqually(codigo, 8);
 
-            //insertar registro lector_en_linea observable de codigo en sistema
-            if (resultSetGetLectorByPort != null) {
-                Query.insertLectorEnLinea(conn, resultSetGetLectorByPort, codigo, Date.getDateString(), Date.getHourString());
-            }
+            for (int indexCodigo = 0; indexCodigo < codigoList.size(); indexCodigo++) {
 
-            //verirfico que código leido no existe en base de datos para no agregar mas de un código
-            if (Query.existCodigo(conn, codigo) != null) {
-                return;
-            }
+                codigo = codigoList.get(indexCodigo);
 
-            ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
-            //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
-            CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(connUnitec, codigo);
-            try {
-                connUnitec.getConnection().close();
-            } catch (SQLException ex1) {
-                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-            connUnitec.disconnection();
-            connUnitec = null;
+                System.out.println("codigo length:" + codigo.length());
+                for (int i = 0; i < codigo.length(); i++) {
+                    System.out.println("codigo: " + codigo.charAt(i));
+                }
 
-            if (cajaUnitec != null) {
+                count++;
+                System.out.println("contador de lector: " + count);
+
+                //obtiene calibrador y lector a traves de lector
+                ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+                ResultSet resultSetGetLectorByPort = Query.getLectorByPort(conn, port);
+
+                //insertar registro lector_en_linea observable de codigo en sistema
                 if (resultSetGetLectorByPort != null) {
-                    //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
-                    ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
-                    if (resultSetUsuariosEnLinea != null) {
-                        //busca caja en base de datos sellado para obtener ponderación de caja
-                        //cajaUnitec.setCodigo_Envase("48");
-                        CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
+                    Query.insertLectorEnLinea(conn, resultSetGetLectorByPort, codigo, Date.getDateString(), Date.getHourString());
+                }
 
-                        //obtener id de apertura_cierre_de_turno
-                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetLectorByPort);
-                        if (resultSetAperturaCierreDeTurno != null) {
-                            //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
-                            Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, cajaUnitec, codigo);
+                //verirfico que código leido no existe en base de datos para no agregar mas de un código
+                if (Query.existCodigo(conn, codigo) != null) {
+                    return;
+                }
+
+                ConexionBaseDeDatosUnitec connUnitec = new ConexionBaseDeDatosUnitec();
+                //Consultar codigo de barra en base de datos externa, obtiene caja por el codigo
+                CajaUnitec cajaUnitec = getCajaPorCodigoUnitec(connUnitec, codigo);
+
+                try {
+                    connUnitec.getConnection().close();
+                } catch (SQLException ex1) {
+                    Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                connUnitec.disconnection();
+                connUnitec = null;
+
+                if (cajaUnitec != null) {
+                    if (resultSetGetLectorByPort != null) {
+                        //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
+                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
+                        if (resultSetUsuariosEnLinea != null) {
+                            //busca caja en base de datos sellado para obtener ponderación de caja
+                            //cajaUnitec.setCodigo_Envase("48");
+                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee:" + cajaUnitec.getCodigo_Envase());
+                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee calibre:" + cajaUnitec.getCodigo_Calibre());
+                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee confection:" + cajaUnitec.getCodigo_Confection());
+                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee embalaje:" + cajaUnitec.getCodigo_Embalaje());
+                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee caja:" + cajaUnitec.getCod_Caja());
+
+                            CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec);
+
+                            //obtener id de apertura_cierre_de_turno
+                            ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetLectorByPort);
+                            if (resultSetAperturaCierreDeTurno != null) {
+                                //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
+                                Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, cajaSellado, cajaUnitec, codigo);
+                            } else {
+                                System.out.println("resultSetAperturaCierreDeTurno es nulo");
+                                Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
+                            }
                         } else {
-                            Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
+                            System.out.println("No se pudo obtener usuarios en línea");
+                            Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                     } else {
-                        Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
+                        System.out.println("No se pudo obtener lector por puerto");
+                        Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
                     }
                 } else {
-                    Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
-                }
-            } else {
-                System.out.println("cajaUnitec es nulo");
-                Query.insertRegistroProduccion("err", "No se pudo obtener caja desde UNITEC", Utils.Date.getDateString(), Utils.Date.getHourString());
-                if (resultSetGetLectorByPort != null) {
-                    //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
-                    ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
-                    if (resultSetUsuariosEnLinea != null) {
-                        //busca caja en base de datos sellado para obtener ponderación de caja
-                        //CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
+                    System.out.println("cajaUnitec es nulo");
+                    Query.insertRegistroProduccion("err", "No se pudo obtener caja desde UNITEC", Utils.Date.getDateString(), Utils.Date.getHourString());
+                    if (resultSetGetLectorByPort != null) {
+                        //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
+                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
+                        if (resultSetUsuariosEnLinea != null) {
+                            //busca caja en base de datos sellado para obtener ponderación de caja
+                            //CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());
 
-                        //obtener id de apertura_cierre_de_turno
-                        ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetLectorByPort);
-                        if (resultSetAperturaCierreDeTurno != null) {
-                            //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
-                            Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, null, null, codigo);
+                            //obtener id de apertura_cierre_de_turno
+                            ResultSet resultSetAperturaCierreDeTurno = Query.getAperturaCierreDeTurno(conn, resultSetGetLectorByPort);
+                            if (resultSetAperturaCierreDeTurno != null) {
+                                //envia código leido a base de datos. Crea registro diario de tabla registro_diario_caja_sellada (cuando llega un código de barras tipo DataMatrix)
+                                Query.insertRegistroDiarioCajaSellada(conn, resultSetUsuariosEnLinea, resultSetGetLectorByPort, resultSetAperturaCierreDeTurno, null, null, codigo);
+                            } else {
+                                System.out.println("resultSetAperturaCierreDeTurno es nulo");
+                                Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
+                            }
                         } else {
-                            System.out.println("resultSetAperturaCierreDeTurno es nulo");
-                            Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
+                            System.out.println("No se pudo obtener usuarios en línea");
+                            Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                     } else {
-                        System.out.println("No se pudo obtener usuarios en línea");
-                        Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
+                        System.out.println("No se pudo obtener lector por puerto");
+                        Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
                     }
-                } else {
-                    System.out.println("No se pudo obtener lector por puerto");
-                    Query.insertRegistroProduccion("err", "No se pudo obtener lector por puerto", Utils.Date.getDateString(), Utils.Date.getHourString());
                 }
+                try {
+                    conn.getConnection().close();
+                } catch (SQLException ex1) {
+                    Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
+                }
+                conn.disconnection();
+                conn = null;
             }
-            try {
-                conn.getConnection().close();
-            } catch (SQLException ex1) {
-                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex1);
-            }
-            conn.disconnection();
-            conn = null;
         } else if (tag == "RFID") {
             ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
             //ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
@@ -483,6 +499,7 @@ public class TwoWaySerialComm {
             conn.disconnection();
             conn = null;
         }
+
     }
 
     /**
@@ -542,5 +559,16 @@ public class TwoWaySerialComm {
         //codigo = "20000709";
         CajaUnitec caja = Query.getCajaPorCodigoUnitec(connUnitec, codigo);
         return caja;
+    }
+
+    public static List<String> splitEqually(String text, int size) {
+        // Give the list the right capacity to start with. You could use an array
+        // instead if you wanted.
+        List<String> ret = new ArrayList<String>((text.length() + size - 1) / size);
+
+        for (int start = 0; start < text.length(); start += size) {
+            ret.add(text.substring(start, Math.min(text.length(), start + size)));
+        }
+        return ret;
     }
 }

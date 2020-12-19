@@ -287,8 +287,8 @@ public class Query {
 
     public static void insertRegistroDiarioCajaSellada(ConexionBaseDeDatosSellado conn, ResultSet resultSetUsuariosEnLinea, ResultSet resultSetGetLectorByPort, ResultSet crearRegistroDiarioCajaSellada, CajaSellado cajaSellado, CajaUnitec cajaUnitec, String codigo) {
         try {
-            System.out.println("");
-            System.out.println("*** Insertar registro diario caja sellada ***");
+            //System.out.println("");
+            //System.out.println("*** Insertar registro diario caja sellada ***");
             resultSetUsuariosEnLinea.beforeFirst();
             resultSetGetLectorByPort.beforeFirst();
             crearRegistroDiarioCajaSellada.beforeFirst();
@@ -537,9 +537,6 @@ public class Query {
                                     Utils.Date.getDateString(),
                                     Utils.Date.getHourString());
                         }
-                        if (resultSet != null) {
-                            insertCajaSellado(conn, resultSet);
-                        }
                     }
                 }
             }
@@ -613,16 +610,17 @@ public class Query {
         return null;
     }
 
-    public static CajaSellado getCajaPorCodigoSellado(ConexionBaseDeDatosSellado conn, String codigoEnvaseUnitec, String categoriaUnitec, String calibreUnitec) {
+    public static CajaSellado getCajaPorCodigoSellado(ConexionBaseDeDatosSellado conn, CajaUnitec cajaUnitec) {
         try {
+            String codigoConfectionUnitec = cajaUnitec.getCodigo_Confection();
             //System.out.println("");
             //System.out.println("*** Obtiene caja por codigo de sellado ***");
             String query = "select * from caja where codigo_envase = ? limit 1";
             PreparedStatement preparedStatement = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
-            preparedStatement.setString(1, codigoEnvaseUnitec);
+            preparedStatement.setString(1, codigoConfectionUnitec);
             ResultSet resultSet = preparedStatement.executeQuery();
-            if (!isEmptyResultSet(resultSet, "Se encotró envase de caja por codigo:" + codigoEnvaseUnitec, "No se encotró envase de caja por codigo:" + codigoEnvaseUnitec)) {
+            if (!isEmptyResultSet(resultSet, "Se encotró envase de caja por codigo:" + codigoConfectionUnitec, "No se encotró envase de caja por codigo:" + codigoConfectionUnitec)) {
                 resultSet.beforeFirst();
                 CajaSellado caja = null;
                 while (resultSet.next()) {
@@ -634,6 +632,8 @@ public class Query {
                     caja = new CajaSellado(id, codigo_envase, envase, descripcion, ponderacion);
                 }
                 return caja;
+            } else {
+                insertCajaSellado(conn, cajaUnitec);
             }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getCajaPorCodigoSellado SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
@@ -1040,20 +1040,19 @@ public class Query {
         return null;
     }
 
-    public static ResultSet existCajaSelladaPorCodigoDeEnvase(ConexionBaseDeDatosSellado conn, ResultSet resultSetRegistroDiarioCajaSellada) {
+    public static ResultSet existCajaSelladaPorCodigoConfection(ConexionBaseDeDatosSellado conn, CajaUnitec cajaUnitec) {
         try {
-            resultSetRegistroDiarioCajaSellada.beforeFirst();
-            while (resultSetRegistroDiarioCajaSellada.next()) {
-                String query = "select * from caja where codigo_envase= ?";
-                PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
-                        ResultSet.CONCUR_UPDATABLE);
-                String codigoEnvase = resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec");
-                preparedStmt.setString(1, codigoEnvase);
-                ResultSet resultSet = preparedStmt.executeQuery();
-                if (!isEmptyResultSet(resultSet, "Se encuentra embalaje por código:" + codigoEnvase, "No se encuentra embalaje por cdigo:" + codigoEnvase)) {
-                    return resultSet;
-                }
+
+            String query = "select * from caja where codigo_envase= ?";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            String codigoConfection = cajaUnitec.getCodigo_Confection();
+            preparedStmt.setString(1, codigoConfection);
+            ResultSet resultSet = preparedStmt.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Se encuentra embalaje por código:" + codigoConfection, "No se encuentra embalaje por cdigo:" + codigoConfection)) {
+                return resultSet;
             }
+
         } catch (SQLException ex) {
             Query.insertRegistroDev("warn", "Error al obtener cajas selladas por código de embalaje: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
@@ -1061,27 +1060,34 @@ public class Query {
         return null;
     }
 
-    public static void insertCajaSellado(ConexionBaseDeDatosSellado conn, ResultSet resultSetRegistroDiarioCajaSellada) {
+    public static void insertCajaSellado(ConexionBaseDeDatosSellado conn, CajaUnitec cajaUnitec) {
+        //verifico que envase no sea nulo
+        //p: una caja siempe viene con envase nulo 
+        /*
+        if(cajaUnitec.getCodigo_Envase().equalsIgnoreCase("")){
+            return;
+        }
+         */
+
         //verirfico que código leido no existe en base de datos para no agregar mas de un código
-        if (Query.existCajaSelladaPorCodigoDeEnvase(conn, resultSetRegistroDiarioCajaSellada) != null) {
+        if (Query.existCajaSelladaPorCodigoConfection(conn, cajaUnitec) != null) {
             return;
         }
         try {
-            resultSetRegistroDiarioCajaSellada.beforeFirst();
-            while (resultSetRegistroDiarioCajaSellada.next()) {
-                String query = " insert into caja (codigo_envase, envase, descripcion)"
-                        + " values (?, ?, ?)";
-                if (resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec") != null) {
-                    if (!resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec").equalsIgnoreCase("")) {
-                        PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
-                        preparedStmt.setString(1, resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec"));
-                        preparedStmt.setString(2, resultSetRegistroDiarioCajaSellada.getString("Envase_Unitec"));
-                        preparedStmt.setString(3, "Envase: " + resultSetRegistroDiarioCajaSellada.getString("Envase_Unitec") + ", Codigo confección: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Confection_Unitec") + ", Confección: " + resultSetRegistroDiarioCajaSellada.getString("Confection_Unitec") + ", Código embalaje: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Embalaje_Unitec") + ", Embalaje: " + resultSetRegistroDiarioCajaSellada.getString("Embalaje_Unitec"));
-                        preparedStmt.execute();
-                        Query.insertRegistroProduccion("ok", "Nueva caja de sellado insertado correctamente: " + resultSetRegistroDiarioCajaSellada.getString("Codigo_Envase_Unitec"), Utils.Date.getDateString(), Utils.Date.getHourString());
-                    }
+
+            String query = " insert into caja (codigo_envase, envase, descripcion)"
+                    + " values (?, ?, ?)";
+            if (cajaUnitec.getCodigo_Confection() != null) {
+                if (!cajaUnitec.getCodigo_Confection().equalsIgnoreCase("")) {
+                    PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
+                    preparedStmt.setString(1, cajaUnitec.getCodigo_Confection());
+                    preparedStmt.setString(2, cajaUnitec.getConfection());
+                    preparedStmt.setString(3, "Envase: " + cajaUnitec.getEnvase() + ", Codigo envase: " + cajaUnitec.getCodigo_Envase() + ", Código embalaje: " + cajaUnitec.getCodigo_Embalaje() + ", Embalaje: " + cajaUnitec.getEmbalaje());
+                    preparedStmt.execute();
+                    Query.insertRegistroProduccion("ok", "Nueva caja de sellado insertado correctamente: " + cajaUnitec.getCodigo_Confection(), Utils.Date.getDateString(), Utils.Date.getHourString());
                 }
             }
+
         } catch (SQLException ex) {
             Query.insertRegistroProduccion("warn", "No se pudo insertar nueva caja de sellado", Utils.Date.getDateString(), Utils.Date.getHourString());
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);

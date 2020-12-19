@@ -148,10 +148,14 @@ public class ModbusTCP {
                                     hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));
                                     //System.out.println(res.getRegisters()[i].getValue());
                                 }
-
+                                hex = hex.replace(" ", "");
                                 if (!hex.equalsIgnoreCase("")) {
                                     String codigo = Utils.HexToASCII.convertHexToASCII(hex);
-                                    codigo = Utils.HexToASCII.limpiarString(codigo);                       
+
+                                    if (codigo == null) {
+                                        return;
+                                    }
+                                    codigo = Utils.HexToASCII.limpiarString(codigo);
                                     //System.out.println("****** CODIGO LEIDO ******");
                                     System.out.println("Código lector validador: " + codigo);
 
