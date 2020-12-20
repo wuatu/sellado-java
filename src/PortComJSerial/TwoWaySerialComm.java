@@ -287,8 +287,7 @@ public class TwoWaySerialComm {
             return;
         }
 
-        System.out.println("Código: " + codigo);
-
+        //System.out.println("Código: " + codigo);
         if (tag == "LECTOR") {
 
             List<String> codigoList = splitEqually(codigo, 8);
@@ -297,13 +296,14 @@ public class TwoWaySerialComm {
 
                 codigo = codigoList.get(indexCodigo);
 
+                /*
                 System.out.println("codigo length:" + codigo.length());
                 for (int i = 0; i < codigo.length(); i++) {
                     System.out.println("codigo: " + codigo.charAt(i));
                 }
-
+                 */
                 count++;
-                System.out.println("contador de lector: " + count);
+                //System.out.println("contador de lector: " + count);
 
                 //obtiene calibrador y lector a traves de lector
                 ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
@@ -334,15 +334,15 @@ public class TwoWaySerialComm {
                 if (cajaUnitec != null) {
                     if (resultSetGetLectorByPort != null) {
                         //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
-                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
+                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString(), codigo);
                         if (resultSetUsuariosEnLinea != null) {
                             //busca caja en base de datos sellado para obtener ponderación de caja
                             //cajaUnitec.setCodigo_Envase("48");
-                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee:" + cajaUnitec.getCodigo_Envase());
-                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee calibre:" + cajaUnitec.getCodigo_Calibre());
-                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee confection:" + cajaUnitec.getCodigo_Confection());
-                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee embalaje:" + cajaUnitec.getCodigo_Embalaje());
-                            System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee caja:" + cajaUnitec.getCod_Caja());
+                            //System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee:" + cajaUnitec.getCodigo_Envase());
+                            //System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee calibre:" + cajaUnitec.getCodigo_Calibre());
+                            //System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee confection:" + cajaUnitec.getCodigo_Confection());
+                            //System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee embalaje:" + cajaUnitec.getCodigo_Embalaje());
+                            //System.out.println("codigo envaseeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee caja:" + cajaUnitec.getCod_Caja());
 
                             CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec);
 
@@ -356,7 +356,7 @@ public class TwoWaySerialComm {
                                 Query.insertRegistroProduccion("err", "No se pudo obtener apertura/cierre de turno", Utils.Date.getDateString(), Utils.Date.getHourString());
                             }
                         } else {
-                            System.out.println("No se pudo obtener usuarios en línea");
+                            //System.out.println("No se pudo obtener usuarios en línea");
                             Query.insertRegistroProduccion("err", "No se pudo obtener usuarios en línea", Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
                     } else {
@@ -368,7 +368,7 @@ public class TwoWaySerialComm {
                     Query.insertRegistroProduccion("err", "No se pudo obtener caja desde UNITEC", Utils.Date.getDateString(), Utils.Date.getHourString());
                     if (resultSetGetLectorByPort != null) {
                         //Obtener registro diario de tabla registro_diario_usuario_en_linea (cuando llega un código de barras tipo DataMatrix)                                
-                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString());
+                        ResultSet resultSetUsuariosEnLinea = Query.getRegistroDiarioUsuariosEnLinea(conn, resultSetGetLectorByPort, Date.getDateString(), codigo);
                         if (resultSetUsuariosEnLinea != null) {
                             //busca caja en base de datos sellado para obtener ponderación de caja
                             //CajaSellado cajaSellado = Query.getCajaPorCodigoSellado(conn, cajaUnitec.getCodigo_Envase(), cajaUnitec.getCategoria(), cajaUnitec.getCalibre());

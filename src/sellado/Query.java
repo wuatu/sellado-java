@@ -110,10 +110,10 @@ public class Query {
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
         }
         if (i == 0) {
-            System.out.println(err);
+            //System.out.println(err);
             return true;
         }
-        System.out.println(res);
+        //System.out.println(res);
         return false;
     }
 
@@ -177,7 +177,7 @@ public class Query {
         }
     }
 
-    public static ResultSet getRegistroDiarioUsuariosEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetLector, String fecha) {
+    public static ResultSet getRegistroDiarioUsuariosEnLinea(ConexionBaseDeDatosSellado conn, ResultSet resultSetLector, String fecha, String codigo) {
         try {
             //System.out.println("");
             //System.out.println("*** Obtiene usuarios en linea ***");
@@ -192,7 +192,7 @@ public class Query {
                 preparedStmt.setInt(2, resultSetLector.getInt("linea.id"));
                 preparedStmt.setString(3, fecha);
                 ResultSet resultSet = preparedStmt.executeQuery();
-                if (!isEmptyResultSet(resultSet, "Usuario(s) en linea encontrado(s)", "Usuario(s) en linea NO encontrado(s) en calibrador id: " + resultSetLector.getInt("calibrador.id") + ", linea id: " + resultSetLector.getInt("linea.id"))) {
+                if (!isEmptyResultSet(resultSet, "Usuario(s) en linea encontrado(s)", "Usuario(s) en linea NO encontrado(s) en calibrador id: " + resultSetLector.getInt("calibrador.id") + ", linea id: " + resultSetLector.getString("linea.nombre") + ", codigo:" + codigo)) {
                     Query.insertRegistroProduccion("ok", "Usuario(s) en linea encontrado(s)", Utils.Date.getDateString(), Utils.Date.getHourString());
                     return resultSet;
                 }
@@ -295,6 +295,10 @@ public class Query {
             while (crearRegistroDiarioCajaSellada.next()) {
                 while (resultSetGetLectorByPort.next()) {
                     while (resultSetUsuariosEnLinea.next()) {
+                        //System.out.println("codigo:" + codigo);
+                        //System.out.println("calibrador " + resultSetUsuariosEnLinea.getString("nombre_calibrador"));
+                        //System.out.println("linea " + resultSetUsuariosEnLinea.getString("nombre_linea"));
+
                         // the mysql insert statement
                         String query = " insert into registro_diario_caja_sellada (id_calibrador, "
                                 + "nombre_calibrador, "
@@ -559,7 +563,7 @@ public class Query {
                         ResultSet.CONCUR_UPDATABLE);
                 int calibradorId = resultSetLector.getInt("calibrador.id");
                 preparedStatement.setInt(1, calibradorId);
-                System.out.println("id de calibrador:" + calibradorId);
+                //System.out.println("id de calibrador:" + calibradorId);
                 ResultSet resultSet = preparedStatement.executeQuery();
                 if (!isEmptyResultSet(resultSet, "Se obtuvo apertura/cierre de turno", "No se obtuvo apertura/cierre de turno")) {
                     return resultSet;
@@ -737,8 +741,7 @@ public class Query {
         return false;
     }
 
-    public static void updateRegistroDiarioCajaCerradaCodigo(String codigo, int waitingTime) {
-        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+    public static void updateRegistroDiarioCajaCerradaCodigo(ConexionBaseDeDatosSellado conn, String codigo, int waitingTime) {
 
         ResultSet resultSet = getRegistroDiarioCajaSellada(conn, codigo);
         try {
@@ -761,7 +764,8 @@ public class Query {
                 if (tiempoTranscurridoEnMinutos < waitingTime) {
                     isBeforeTime = true;
                 }
-                String query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, fecha_validacion_time = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
+
+                String query = "update registro_diario_caja_sellada_aux set fecha_validacion = ?, hora_validacion = ?, fecha_validacion_time = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
                 PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, Date.getDateString());
                 preparedStmt.setString(2, Date.getHourString());
@@ -772,7 +776,8 @@ public class Query {
                 preparedStmt.setString(6, codigo);
                 preparedStmt.executeUpdate();
 
-                query = "update registro_diario_caja_sellada_aux set fecha_validacion = ?, hora_validacion = ?, fecha_validacion_time = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
+                
+                query = "update registro_diario_caja_sellada set fecha_validacion = ?, hora_validacion = ?, fecha_validacion_time = ?, is_verificado = ?, is_before_time = ? where codigo_de_barra = ? and fecha_validacion='' ORDER BY id DESC;";
                 preparedStmt = conn.getConnection().prepareStatement(query);
                 preparedStmt.setString(1, Date.getDateString());
                 preparedStmt.setString(2, Date.getHourString());
@@ -782,23 +787,17 @@ public class Query {
                 preparedStmt.setBoolean(5, isBeforeTime);
                 preparedStmt.setString(6, codigo);
                 preparedStmt.executeUpdate();
+                
+
             }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error update updateRegistroDiarioCajaCerradaCodigo SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
             System.out.println("Error tipo SQLException portCOM metodo updateFechaTerminoUsuarioEnLinea: " + ex.getMessage());
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        conn.disconnection();
-        System.out.println("");
     }
 
-    public static void insertLectorValidadorEnCalibrador(int calibradorId, String codigo, String fecha, String hora) {
-        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+    public static void insertLectorValidadorEnCalibrador(ConexionBaseDeDatosSellado conn, int calibradorId, String codigo, String fecha, String hora) {
         try {
             Statement statement = conn.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from lector_validador_en_calibrador where fk_calibrador='" + calibradorId + "'");
@@ -824,13 +823,6 @@ public class Query {
         } catch (SQLException ex) {
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        conn.disconnection();
-        conn = null;
     }
 
     public static int getWaitingTime() {
@@ -1025,13 +1017,40 @@ public class Query {
 
     public static ResultSet existCodigo(ConexionBaseDeDatosSellado conn, String codigo) {
         try {
-            String query = "select * from registro_diario_caja_sellada where codigo_de_barra= ?";
+            String query = "select * from registro_diario_caja_sellada_aux where codigo_de_barra= ?";
             PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
                     ResultSet.CONCUR_UPDATABLE);
             preparedStmt.setString(1, codigo);
             ResultSet resultSet = preparedStmt.executeQuery();
             if (!isEmptyResultSet(resultSet, "Código pistoleado mas de una vez:" + codigo, "código pistoleado una vez:" + codigo)) {
                 return resultSet;
+            }
+        } catch (SQLException ex) {
+            Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRegistroDiarioCajaSellada SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
+            Logger.getLogger(Sellado.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
+
+    public static ResultSet existCodigoRegistroDiarioCajaSelladaByLectorValidador(ConexionBaseDeDatosSellado conn, String codigo, int count) {
+        try {
+            String query = "select * from registro_diario_caja_sellada_aux where codigo_de_barra= ?";
+            PreparedStatement preparedStmt = conn.getConnection().prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE,
+                    ResultSet.CONCUR_UPDATABLE);
+            preparedStmt.setString(1, codigo);
+            ResultSet resultSet = preparedStmt.executeQuery();
+            if (!isEmptyResultSet(resultSet, "Código pistoleado mas de una vez:" + codigo, "código pistoleado una vez:" + codigo)) {
+                resultSet.beforeFirst();
+                while (resultSet.next()) {
+                    if (resultSet.getInt("id_calibrador") == 2) {
+                        System.out.println("");
+
+                        System.out.println(" ** Código lector validador: " + codigo);
+                        System.out.println("Contador de lecturas sensor validador: " + count);
+                    }
+                }
+            } else {
+                System.out.println("Código lector validador NO encontrado: " + codigo);
             }
         } catch (SQLException ex) {
             Query.insertRegistroDev("Error PortCom Query", "Error al obtener getRegistroDiarioCajaSellada SQLException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
