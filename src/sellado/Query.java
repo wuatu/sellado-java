@@ -737,8 +737,7 @@ public class Query {
         return false;
     }
 
-    public static void updateRegistroDiarioCajaCerradaCodigo(String codigo, int waitingTime) {
-        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+    public static void updateRegistroDiarioCajaCerradaCodigo(ConexionBaseDeDatosSellado conn, String codigo, int waitingTime) {
 
         ResultSet resultSet = getRegistroDiarioCajaSellada(conn, codigo);
         try {
@@ -788,17 +787,10 @@ public class Query {
             System.out.println("Error tipo SQLException portCOM metodo updateFechaTerminoUsuarioEnLinea: " + ex.getMessage());
             Logger.getLogger(PortCOM.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        conn.disconnection();
-        System.out.println("");
     }
 
-    public static void insertLectorValidadorEnCalibrador(int calibradorId, String codigo, String fecha, String hora) {
-        ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+    public static void insertLectorValidadorEnCalibrador(ConexionBaseDeDatosSellado conn, int calibradorId, String codigo, String fecha, String hora) {        
+        
         try {
             Statement statement = conn.getConnection().createStatement();
             ResultSet resultSet = statement.executeQuery("select * from lector_validador_en_calibrador where fk_calibrador='" + calibradorId + "'");
@@ -823,14 +815,7 @@ public class Query {
 
         } catch (SQLException ex) {
             Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        try {
-            conn.getConnection().close();
-        } catch (SQLException ex) {
-            Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        conn.disconnection();
-        conn = null;
+        }        
     }
 
     public static int getWaitingTime() {

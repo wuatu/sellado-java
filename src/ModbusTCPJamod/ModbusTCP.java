@@ -12,6 +12,7 @@ import baseDeDatos.ConexionBaseDeDatosUnitec;
 import java.net.InetAddress;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.scene.control.Alert;
@@ -33,21 +34,18 @@ public class ModbusTCP {
 
     TCPMasterConnection tcpMasterConnection = null; //the connection
     public Thread thread = null;
+    public Thread threadQuery = null;
     public String error = null;
     int count = 0;
+    String codigo = "";
+    int countThread = 0;
+
+    ArrayList<ThreadQuery> threadQuerys = new ArrayList();
+    ArrayList<ThreadQuery> threadQuerysEnEjecucion = new ArrayList();
 
     public ModbusTCP(String nombre, String ip, int waitingTime, int inicioDireccionDeMemoriaLectura, int calibradorId) {
         try {
 
-            /*
-            int contadorDeLecturasRealizadas=7002;
-            int seLeyoUnCodigo=7003; 0 si no se leyo codigo, 1 en caso contrario
-            int cantidadDeRegistrosALeer=7004;            
-            int codigoRegistroInicial=7005;
-             */
-            int contadorDeLecturasRealizadas = inicioDireccionDeMemoriaLectura; //7002
-            int seLeyoUnCodigo = inicioDireccionDeMemoriaLectura + 1; //7003
-            int totalDeRegistrosALeer = inicioDireccionDeMemoriaLectura + 2; //7004  
             int codigoRegistroInicial = inicioDireccionDeMemoriaLectura + 3; //7005
 
             InetAddress addr = null;
@@ -75,98 +73,59 @@ public class ModbusTCP {
             Runnable runable = new Runnable() {
                 @Override
                 public void run() {
-                    int secondCodeReader = 0; //empieza a ecribir de la segunda iteración cuando i==1;
-                    int cantidadDeRegistrosALeer = 0; //cantidad de registros a leer
-                    boolean isLeido = false; //confirma si es un nuevo codigo
-                    int numeroLecturaNuevo = 0;
-                    int numeroLecturaAnterior = 0;
+                    ejecutaThreadQuery();
+                    codigo = "";
+                    String codigoAnterior = "NA";
                     do {
-                        // obtiene cantidad de registros a leer 
-                        ReadMultipleRegistersRequest cantidadDeRegistrosALeerRequest = new ReadMultipleRegistersRequest(totalDeRegistrosALeer, 1); // obtiene cantidad de registros a leer 7004
                         ModbusTCPTransaction trans = new ModbusTCPTransaction(tcpMasterConnection);
-                        trans.setRequest(cantidadDeRegistrosALeerRequest);
+                        ReadMultipleRegistersResponse res = null;
+
+                        ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(codigoRegistroInicial, 4); //desde donde comienza el registro del codigo 7005
+                        trans.setRequest(req);
                         try {
                             trans.execute();
+                            res = (ReadMultipleRegistersResponse) trans.getResponse();
                         } catch (ModbusSlaveException ex) {
-                            Logger.getLogger(ModbusTCP.class.getName()).log(Level.SEVERE, null, ex);
-                            System.out.println("Error ModbusSlaveException: " + ex);
+                            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusSlaveException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         } catch (ModbusException ex) {
-                            Logger.getLogger(ModbusTCP.class.getName()).log(Level.SEVERE, null, ex);
-                            System.out.println("Error ModbusException: " + ex);
-                            /*Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
-                            System.out.println("Alerta 6");
-                            Alert alert = new Alert(Alert.AlertType.ERROR);
-                            alert.setTitle("Alerta 6");
-                            alert.setHeaderText("Error de conexión sensor validador");
-                            alert.setContentText("Sensor desconectado: " + ex.getMessage());
-                            alert.showAndWait();
-                            System.exit(1);
-                             */
+                            Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
                         }
 
-                        ReadMultipleRegistersResponse res = (ReadMultipleRegistersResponse) trans.getResponse();
-                        cantidadDeRegistrosALeer = res.getRegisters()[0].getValue();
-
-                        //si cantidad de registros a leer es impar se debe sumar 1 para que quede par
-                        if (cantidadDeRegistrosALeer % 2 != 0) {
-                            cantidadDeRegistrosALeer = cantidadDeRegistrosALeer + 1;
+                        String hex = "";
+                        for (int i = 0; i < res.getRegisters().length; i++) {
+                            hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));
                         }
-                        // obtiene numero de lectura de registro a leer ref 7002
-                        numeroLecturaNuevo = obtieneRegistros(contadorDeLecturasRealizadas, 1);
+                        hex = hex.replace(" ", "");
 
-                        //obtiene registro que confirma si se leyo un codigo 7003
-                        if (obtieneRegistros(seLeyoUnCodigo, 1) == 1) {
-                            isLeido = true;
-                        } else {
-                            isLeido = false;
-                        }
-
-                        //System.out.println("numero lectura: " + numeroLecturaNuevo);
-                        //System.out.println("cantidad de registros a leer: " + cantidadDeRegistrosALeer);
-                        //System.out.println("Reading...");
-                        if (numeroLecturaNuevo != numeroLecturaAnterior && isLeido == true) {
-                            //obtiene codigo leido
-                            System.out.println("");
-                            System.out.println("*** Lector validador ***");
-                            count++;
-                            System.out.println("Contador de lecturas sensor validador: " + count);
-                            numeroLecturaAnterior = numeroLecturaNuevo;
-                            if (secondCodeReader == 1) {
-                                ReadMultipleRegistersRequest req = new ReadMultipleRegistersRequest(codigoRegistroInicial, cantidadDeRegistrosALeer); //desde donde comienza el registro del codigo 7005
-                                trans.setRequest(req);
-                                try {
-                                    trans.execute();
-                                    res = (ReadMultipleRegistersResponse) trans.getResponse();
-                                } catch (ModbusSlaveException ex) {
-                                    Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusSlaveException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
-                                } catch (ModbusException ex) {
-                                    Query.insertRegistroDev("Error ModbusTCP", "Error conexion sensor validador ModbusException: " + ex.getMessage(), Utils.Date.getDateString(), Utils.Date.getHourString());
-                                }
-
-                                String hex = "";
-                                for (int i = 0; i < res.getRegisters().length; i++) {
-                                    hex = hex.concat(Integer.toHexString(res.getRegisters()[i].getValue()));
-                                    //System.out.println(res.getRegisters()[i].getValue());
-                                }
-
-                                if (!hex.equalsIgnoreCase("")) {
-                                    String codigo = Utils.HexToASCII.convertHexToASCII(hex);
-                                    codigo = Utils.HexToASCII.limpiarString(codigo);                       
-                                    //System.out.println("****** CODIGO LEIDO ******");
-                                    System.out.println("Código lector validador: " + codigo);
-
-                                    //inserta codigo en tabla lectorValidadpr_en_calibrador
-                                    Query.insertLectorValidadorEnCalibrador(calibradorId, codigo, Date.getDateString(), Date.getHourString());
-
-                                    //Verificar a traves de lector verificador, updatear valores is_verificado, is_before_time tabla registro_diario_caja_sellada
-                                    Query.updateRegistroDiarioCajaCerradaCodigo(codigo, waitingTime);
-                                } else {
-                                    System.out.println("Lectura no valida o vacía");
-                                }
+                        if (!hex.equalsIgnoreCase("") || !hex.equalsIgnoreCase("0")) {
+                            if (hex.length() % 2 != 0) {
+                                return;
                             }
 
+                            codigo = Utils.HexToASCII.convertHexToASCII(hex);
+
+                            if (codigo == null) {
+                                return;
+                            }
+                            codigo = Utils.HexToASCII.limpiarString(codigo);
+
+                            if (!codigo.equalsIgnoreCase(codigoAnterior)) {
+                                codigoAnterior = codigo;
+
+                                count++;
+                                countThread++;
+
+                                ThreadQuery threadQuery = new ThreadQuery(codigo, calibradorId, waitingTime, countThread);
+                                threadQuerys.add(threadQuery);
+                                threadQuery.start();
+
+                            }
+                        } else {
+                            System.out.println("Lectura no valida o vacía");
                         }
-                        secondCodeReader = 1;
+                        //}
+
+                        //secondCodeReader = 1;
                     } while (true);
                 }
             };
@@ -182,6 +141,14 @@ public class ModbusTCP {
         }
     }
 
+    public void ejecutaThreadQuery() {
+        if (threadQuerysEnEjecucion.size() < 50) {
+            if (threadQuerys.size() > 0) {
+                threadQuerys.get(0).start();
+            }
+        }
+    }
+
     // obtiene cantidad de registros a leer     
     public int obtieneRegistros(int ref, int count) {
         ReadMultipleRegistersRequest cantidadDeRegistrosALeerRequest = new ReadMultipleRegistersRequest(ref, count); // obtiene cantidad de registros a leer                    
@@ -194,6 +161,51 @@ public class ModbusTCP {
         }
         ReadMultipleRegistersResponse res = (ReadMultipleRegistersResponse) trans.getResponse();
         return res.getRegisters()[0].getValue();
+    }
+
+    public class ThreadQuery extends Thread {
+
+        int calibradorId;
+        int waitingTime;
+        String codigo;
+        int countThread;
+
+        public ThreadQuery(String codigo, int calibradorId, int waitingTime, int countThread) {
+            this.calibradorId = calibradorId;
+            this.waitingTime = waitingTime;
+            this.codigo = codigo;
+            this.countThread = countThread;
+        }
+
+        public void run() {
+            System.out.println("Thread running: " + countThread);
+            ConexionBaseDeDatosSellado conn = new ConexionBaseDeDatosSellado();
+            //select registro diario             
+            Query.existCodigoRegistroDiarioCajaSelladaByLectorValidador(conn, codigo, count);
+
+            //inserta codigo en tabla lectorValidadpr_en_calibrador
+            Query.insertLectorValidadorEnCalibrador(conn, calibradorId, codigo, Date.getDateString(), Date.getHourString());
+
+            //Verificar a traves de lector verificador, updatear valores is_verificado, is_before_time tabla registro_diario_caja_sellada
+            Query.updateRegistroDiarioCajaCerradaCodigo(conn, codigo, waitingTime);
+            try {
+                conn.getConnection().close();
+            } catch (SQLException ex) {
+                Logger.getLogger(Query.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            conn.disconnection();
+            conn = null;
+            removeThreadByCodigo(codigo);
+            System.out.println("Thread running: " + countThread + "finished");
+        }
+
+        public void removeThreadByCodigo(String codigo) {
+            for (int i = 0; i < threadQuerysEnEjecucion.size(); i++) {
+                if (threadQuerysEnEjecucion.get(i).codigo.equalsIgnoreCase(codigo)) {
+                    threadQuerysEnEjecucion.remove(i);
+                }
+            }
+        }
     }
 
 }
